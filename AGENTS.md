@@ -11,7 +11,7 @@ Diese Datei ist das **Übergabeprotokoll**. Läuft das Limit einer Sitzung ab, m
 | **Aktiver Schritt** | – |
 | **Nächster Schritt** | Rückmeldung des Auftraggebers zur Werkstatt-Version. Auf GitHub `develop` als Standard-Branch setzen (sonst holt `git clone` nur `main`) |
 | **Halbfertige Dateien** | keine |
-| **Laufende Dienste** | Docker-Stack `pitstop` (`app` auf http://localhost:8080, `db` nur intern), gestartet mit `docker compose up -d`. Lokale `.env`: `DEMO_MODE=true`, Admin `admin@pitstop.example` (Passwort steht in der `.env`). Kein Dev-Server aktiv |
+| **Laufende Dienste** | Docker-Stack `pitstop` (`app` auf http://localhost:7077, `db` nur intern), gestartet mit `docker compose up -d`. Lokale `.env`: `DEMO_MODE=false`; Testdaten seit 2026-11-19: Firma „Winchester Motorsport“, Admin/Geschäftsführer Derrik Winchester (`derrik.winchester@winchester-group.com`). Kein Dev-Server aktiv |
 | **Blocker / Fragen an den Auftraggeber** | keine. Die Defaults in CONCEPT.md Abschnitt 14 gelten, solange nichts anderes gesagt wird. |
 | **Git** | `origin` = `git@github.com:ZockerDream/pitstop.git` (öffentlich lesbar über https). **Hauptbranch `develop`** (Code und Doku); `main` enthält nur den ersten Doku-Commit. Autor: `ZockerDream <69266888+ZockerDream@users.noreply.github.com>` (repo-lokal gesetzt) |
 
