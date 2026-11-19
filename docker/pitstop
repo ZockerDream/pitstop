@@ -1,0 +1,4 @@
+#!/bin/sh
+# Kommandozeile im Container, z. B.: docker compose exec app pitstop reset-password admin@example.de
+cd /app
+exec su-exec node node /app/dist/server/cli.js "$@"

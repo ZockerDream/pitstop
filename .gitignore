@@ -1,0 +1,21 @@
+# Abhängigkeiten und Build
+node_modules/
+/dist/
+*.tsbuildinfo
+
+# Konfiguration mit Zugangsdaten bzw. echten Angaben (nur die -example-Dateien gehören ins Repo)
+.env
+.impressum
+
+# Laufzeitdaten (Bind-Mounts der Container) – nur im Projektwurzelordner, nicht src/server/db!
+/data/
+/logs/
+/db/
+/conf/
+
+# Editor und System
+.DS_Store
+*.log
+
+# Ergebnisse der Browser-Tests
+tests/e2e/shots/

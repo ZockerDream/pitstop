@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --animate-drawer-in: drawer-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-fade-in: fade-in 140ms ease-out;
+  --animate-pop-in: pop-in 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  @keyframes drawer-in {
+    from { transform: translateX(24px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes pop-in {
+    from { transform: translateY(6px) scale(0.98); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-zinc-50 font-sans text-zinc-900 antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection {
+    @apply bg-brand-100;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+  }
+}
+
+/* Inhalt der Datenschutzerklärung (Markdown aus conf/datenschutz.md) */
+.prose-legal h1 { @apply mb-4 text-2xl font-semibold tracking-tight; }
+.prose-legal h2 { @apply mt-8 mb-2 text-lg font-semibold; }
+.prose-legal h3 { @apply mt-6 mb-2 font-semibold; }
+.prose-legal p { @apply my-3 leading-relaxed text-zinc-700; }
+.prose-legal ul { @apply my-3 list-disc pl-6 text-zinc-700; }
+.prose-legal ol { @apply my-3 list-decimal pl-6 text-zinc-700; }
+.prose-legal a { @apply text-brand-600 underline; }

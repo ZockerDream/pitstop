@@ -1,0 +1,31 @@
+# Pitstop – Angaben für die öffentliche Seite "Impressum"
+# Kopieren nach .impressum (cp .impressum-example .impressum) und ausfüllen.
+# Leere Felder werden nicht angezeigt. Werte mit Sonderzeichen (#, ", $) in einfache Anführungszeichen setzen.
+# Für die rechtliche Richtigkeit ist der Betreiber verantwortlich.
+
+# Firma oder Name des Anbieters, z. B. Lindner Motorsport GmbH
+IMPRESSUM_NAME=
+
+# z. B. Geschäftsführerin: Katrin Lindner
+IMPRESSUM_VERTRETEN_DURCH=
+
+# z. B. Gewerbering 14
+IMPRESSUM_STRASSE=
+
+# z. B. 93055 Regensburg
+IMPRESSUM_PLZ_ORT=
+
+IMPRESSUM_TELEFON=
+IMPRESSUM_EMAIL=
+
+# z. B. Amtsgericht Regensburg, HRB 12345
+IMPRESSUM_REGISTER=
+
+# z. B. DE123456789
+IMPRESSUM_UST_ID=
+
+# Inhaltlich verantwortlich, z. B. Katrin Lindner, Anschrift wie oben
+IMPRESSUM_VERANTWORTLICH=
+
+# Freitext in einer Zeile, z. B. Kfz-Meisterbetrieb, zuständige Handwerkskammer
+IMPRESSUM_ZUSATZ=

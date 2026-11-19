@@ -1,8 +1,6 @@
 # Pitstop – Business OS
 
-Pitstop ist ein selbst gehostetes All-in-One-ERP/CRM für kleine und mittlere Betriebe. Kundenakten, Rechnungen, Ausgaben, Mitarbeitende und Urlaubsanträge liegen in **einer** Oberfläche. Es läuft mit Docker Compose und speichert alles in PostgreSQL.
-
-> **Stand: in Entwicklung.** Diese Anleitung beschreibt den Zielzustand. Die Befehle funktionieren, sobald die Docker-Phase abgeschlossen ist; den aktuellen Fortschritt zeigt [AGENTS.md](AGENTS.md).
+Pitstop ist ein selbst gehostetes All-in-One-ERP/CRM für **Kfz-Werkstätten mit Tuning**. Kundenakten mit Fahrzeugen, Rechnungen, Ausgaben, Mitarbeitende und Urlaubsanträge liegen in **einer** Oberfläche. Es läuft mit Docker Compose und speichert alles in PostgreSQL.
 
 ## Inhalt
 
@@ -22,9 +20,9 @@ Pitstop ist ein selbst gehostetes All-in-One-ERP/CRM für kleine und mittlere Be
 
 | Modul | Inhalt |
 |---|---|
-| **Dashboard** | Offene Rechnungen, Monatsumsatz, aktive Kunden, Anwesenheit heute; Umsatz und Ausgaben der letzten 6 Monate; Aufgaben & Freigaben (Urlaub genehmigen, überfällige Rechnungen mahnen) |
-| **Kunden (CRM)** | Kundenliste mit Suche und Filter (Aktiv, Lead, Inaktiv); Kundenakte mit Stammdaten, Ansprechpartnern, Notizen und Kommunikationshistorie sowie allen Rechnungen |
-| **Finanzen (ERP)** | Rechnungen mit Status (Offen, Überfällig, Bezahlt) und Mahnstufen; neue Rechnung mit Positionen und automatischer Berechnung von Netto, 19 % MwSt. und Brutto; Ausgaben nach Kategorien |
+| **Dashboard** | Offene Rechnungen, Monatsumsatz, aktive Kunden, Anwesenheit heute; Umsatz und Ausgaben der letzten 6 Monate; Aufgaben & Freigaben (Urlaub genehmigen, überfällige Rechnungen mahnen, fällige HU anbieten) |
+| **Kunden (CRM)** | Kundenliste mit Suche (auch nach Kennzeichen) und Filter (Aktiv, Lead, Inaktiv); Kundenakte mit Stammdaten, **Fahrzeugen** (Kennzeichen, FIN, km-Stand, HU-Termin, Umbauten), Ansprechpartnern, Kommunikationshistorie und allen Rechnungen |
+| **Finanzen (ERP)** | Rechnungen mit Fahrzeug und km-Stand, Status (Offen, Überfällig, Bezahlt) und Mahnstufen; neue Rechnung mit Werkstatt-Positionsvorlagen und automatischer Berechnung von Netto, 19 % MwSt. und Brutto; Ausgaben nach Kategorien |
 | **Personal (HR)** | Mitarbeiterverzeichnis mit Status (Im Dienst, Urlaub, Krank); digitale Personalakte mit Vertrag, Resturlaub und Stunden; Urlaubsanträge stellen, genehmigen und ablehnen |
 | **Einstellungen** | Firmendaten für den Rechnungskopf, Benutzerkonten für Mitarbeitende |
 
@@ -87,7 +85,7 @@ Die Datei enthält die Pflichtangaben für die öffentliche Seite *Impressum*. L
 
 | Variable | Beispiel |
 |---|---|
-| `IMPRESSUM_NAME` | Lindner Haustechnik GmbH |
+| `IMPRESSUM_NAME` | Lindner Motorsport GmbH |
 | `IMPRESSUM_VERTRETEN_DURCH` | Geschäftsführerin: Katrin Lindner |
 | `IMPRESSUM_STRASSE` | Gewerbering 14 |
 | `IMPRESSUM_PLZ_ORT` | 93055 Regensburg |
@@ -96,7 +94,7 @@ Die Datei enthält die Pflichtangaben für die öffentliche Seite *Impressum*. L
 | `IMPRESSUM_REGISTER` | Amtsgericht Regensburg, HRB 12345 |
 | `IMPRESSUM_UST_ID` | DE123456789 |
 | `IMPRESSUM_VERANTWORTLICH` | Katrin Lindner, Anschrift wie oben |
-| `IMPRESSUM_ZUSATZ` | Freitext in einer Zeile, z. B. Berufsbezeichnung und Kammer |
+| `IMPRESSUM_ZUSATZ` | Freitext in einer Zeile, z. B. Kfz-Meisterbetrieb, zuständige Handwerkskammer |
 
 Werte mit Sonderzeichen (`#`, `"`, `$`) in einfache Anführungszeichen setzen. Nach einer Änderung: `docker compose up -d`.
 
@@ -111,7 +109,7 @@ Werte mit Sonderzeichen (`#`, `"`, `$`) in einfache Anführungszeichen setzen. N
 
 ### Demo-Modus
 
-Mit `DEMO_MODE=true` spielt Pitstop beim **ersten Start** Beispieldaten eines erfundenen Handwerksbetriebs ein: 18 Mitarbeitende, rund 30 Kunden, 6 Monate Rechnungen und Ausgaben, Urlaubsanträge. Die Anmeldeseite bietet dann „Als Admin ansehen“ und „Als Mitarbeiter ansehen“, das Benutzermenü einen Rollenwechsel und „Demo-Daten zurücksetzen“.
+Mit `DEMO_MODE=true` spielt Pitstop beim **ersten Start** Beispieldaten einer erfundenen Kfz-Werkstatt mit Tuning ein: 18 Mitarbeitende, rund 180 Kunden mit 210 Fahrzeugen, 6 Monate Rechnungen und Ausgaben, Urlaubsanträge. Die Anmeldeseite bietet dann „Als Admin ansehen“ und „Als Mitarbeiter ansehen“, das Benutzermenü einen Rollenwechsel und „Demo-Daten zurücksetzen“.
 
 **Nicht für echte Daten verwenden.** Im Demo-Modus kann jeder, der die Seite erreicht, sich mit einem Klick als Admin anmelden. Um von der Demo auf echten Betrieb zu wechseln: `DEMO_MODE=false` setzen und mit leerer Datenbank neu beginnen (siehe [Löschen](#löschen), Daten löschen, danach wieder `docker compose up -d`).
 
@@ -279,3 +277,5 @@ Häufige Probleme:
 | [TECHNICAL.md](TECHNICAL.md) | Architektur, Datenmodell, API, Docker-Aufbau, lokale Entwicklung |
 | [AGENTS.md](AGENTS.md) | Aktueller Arbeitsstand und Phasenplan |
 | [CLAUDE.md](CLAUDE.md) | Projektkarte: welche Datei wofür zuständig ist |
+
+Lokal entwickeln: TECHNICAL.md Abschnitt 13. Browser-Tests der Drehbücher: `tests/e2e/run.sh demo.mjs http://localhost:8080` (braucht nur Docker).

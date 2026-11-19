@@ -1,6 +1,6 @@
 # Pitstop – Technische Sicht
 
-Ergänzt [CONCEPT.md](CONCEPT.md) um das *Wie*. Betrieb (Setup, Update, Backup, Löschen) steht in [README.md](README.md). Stand: 2026-11-19, geplant und noch nicht umgesetzt. Nach jeder Phase aktualisieren: Wird etwas anders gebaut als hier beschrieben, wird diese Datei angepasst, nicht der Code an die Datei.
+Ergänzt [CONCEPT.md](CONCEPT.md) um das *Wie*. Betrieb (Setup, Update, Backup, Löschen) steht in [README.md](README.md). Stand: 2026-11-19, **umgesetzt** (Version 0.1). Wird etwas anders gebaut als hier beschrieben, wird diese Datei angepasst, nicht der Code an die Datei.
 
 ## 1. Überblick
 
@@ -26,7 +26,7 @@ Browser ──HTTP──▶ app (Docker, Node 24)                          ─�
 | Validierung | `zod` | Request-Bodies und Umgebungsvariablen |
 | Passwörter | `node:crypto` `scrypt` | Keine native Abhängigkeit |
 | Logs | pino (in Fastify) + `pino-roll` | stdout und `./logs/app`, täglich rotiert, 14 Dateien |
-| Client-Build | Vite (aktuelles Major), React 19, TypeScript strict | Root `src/client` |
+| Client-Build | Vite 8, React 19, TypeScript 6.0 strict | Root `src/client`. **Nicht TypeScript 7:** typescript-eslint unterstützt es noch nicht (`<6.1`) |
 | Styling | Tailwind CSS **v4** über `@tailwindcss/vite` | Konfiguration in CSS (`@theme`), kein `tailwind.config.js` |
 | Icons, Diagramme, Schrift | `lucide-react`, `recharts`, `@fontsource-variable/inter` | Schrift lokal gebündelt |
 | Markdown | `marked` | Nur für `conf/datenschutz.md` |
@@ -35,17 +35,19 @@ Browser ──HTTP──▶ app (Docker, Node 24)                          ─�
 
 Bewusst **nicht** verwendet: ORM, react-router, State-Bibliotheken, UI-Kits, Redis, eigener Reverse-Proxy. Jede weitere Abhängigkeit nur nach Rückfrage.
 
-Nach dem Setup die installierten Versionen eintragen:
+`dependencies` enthält nur, was der Server zur Laufzeit braucht (Fastify, pg, zod, pino). Alle Client-Bibliotheken (React, recharts, lucide-react, marked, Inter) stehen in `devDependencies`, weil Vite sie einbündelt; so bleibt das Image nach `npm prune --omit=dev` klein.
+
+Installierte Versionen (2026-11-19):
 
 | Paket | Version | | Paket | Version |
 |---|---|---|---|---|
-| vite | – | | fastify | – |
-| react | – | | pg | – |
-| typescript | – | | zod | – |
-| tailwindcss | – | | esbuild | – |
-| recharts | – | | lucide-react | – |
+| vite | 8.3 | | fastify | 5.12 |
+| react | 19.3 | | pg | 8.23 |
+| typescript | 6.0 | | zod | 4.6 |
+| tailwindcss | 4.3 | | esbuild | 0.28 |
+| recharts | 3.11 | | lucide-react | 1.76 |
 
-## 3. Repository-Struktur (geplant)
+## 3. Repository-Struktur
 
 ```
 pitstop/
@@ -59,14 +61,19 @@ pitstop/
 │   └── pitstop                 # CLI-Wrapper: `pitstop reset-password <email>`
 ├── package.json  package-lock.json  vite.config.ts  eslint.config.js
 ├── tsconfig.json  tsconfig.client.json  tsconfig.server.json
+├── scripts/build-server.mjs    # esbuild-Bündelung des Servers + Migrationen kopieren
+├── tests/e2e/                  # Browser-Drehbücher (Playwright im Container), run.sh
 └── src/
     ├── shared/                 # von Client UND Server genutzt, ohne DOM und ohne Node-APIs
     │   ├── types.ts            # Domänentypen, API-Typen
     │   ├── money.ts  dates.ts  format.ts  labels.ts
+    │   ├── catalog.ts          # Positionsvorlagen (Rechnungsformular und Demo-Seed)
     │   ├── permissions.ts      # can(role, permission)
     │   └── selectors.ts        # abgeleitete Werte (KPIs, Status, Resturlaub, Aufgaben)
     ├── server/
-    │   ├── main.ts             # Fastify, Plugins, Routen, Static, Start
+    │   ├── main.ts             # Start: Konfiguration, Logger, Erststart, HTTP-Server, Shutdown
+    │   ├── app.ts              # Fastify, Plugins, Fehlerformat, Routen, Static
+    │   ├── errors.ts           # HttpError, parseBody (zod, deutsch), Schema-Bausteine
     │   ├── config.ts           # Umgebungsvariablen lesen und prüfen (zod)
     │   ├── logger.ts           # pino: stdout + logs/app
     │   ├── cli.ts              # reset-password
@@ -76,27 +83,29 @@ pitstop/
     │   │   ├── init.ts         # Erststart: Admin aus .env, Demo-Seed, Marker data/.initialized
     │   │   └── migrations/     # 001_init.sql, 002_….sql
     │   ├── auth/               # password.ts, sessions.ts, guards.ts (requireUser, requirePermission)
-    │   ├── repo/               # SQL je Bereich: customers.ts, invoices.ts, …
-    │   ├── routes/             # auth, bootstrap, customers, invoices, expenses, employees,
-    │   │                       # absences, tasks, settings, users, public, demo, health
+    │   ├── repo/               # SQL je Bereich: customers (inkl. Kontakte, Notizen), invoices, expenses,
+    │   │                       # employees (inkl. Stunden), absences, tasks, settings, users, sql.ts (Teil-Updates)
+    │   ├── routes/             # auth, bootstrap, public (Rechtsseiten, Logo, Health), customers,
+    │   │                       # finance (Rechnungen, Ausgaben), people (Mitarbeiter, Abwesenheiten, Aufgaben),
+    │   │                       # admin (Firmendaten, Benutzer), demo, util.ts
     │   └── demo/               # seed.ts, templates.ts, random.ts
     └── client/
         ├── index.html  main.tsx  App.tsx  index.css
-        ├── lib/                # api.ts (fetch-Wrapper), router.ts
-        ├── store/              # AppStore.tsx, reducer.ts, mutations.ts
+        ├── lib/                # api.ts (fetch-Wrapper), router.ts, modals.tsx (Modal-Host), storage.ts, cx.ts
+        ├── store/              # AppStore.tsx, reducer.ts, mutations.ts (useActions, useRun)
         └── components/
-            ├── layout/   Sidebar TopBar CommandPalette QuickCreateMenu UserMenu NoAccess
-            ├── ui/       Button Badge Card KpiCard Modal Drawer Tabs Input Select Combobox Table
-            │             EmptyState Avatar Toast ConfirmDialog SegmentedControl
-            ├── auth/     LoginPage ChangePasswordModal
+            ├── layout/   Sidebar TopBar (inkl. „+ Neu“ und Benutzermenü) CommandPalette ModalHost NoAccess Splash
+            ├── ui/       Button Badge Card (PageHeader, Stat) KpiCard Modal Drawer Tabs Field (Input, Select, …)
+            │             Combobox feedback (Toasts, Bestätigungsdialog) misc (Avatar, EmptyState, Menu, table …)
+            ├── auth/     LoginPage ForcePasswordChange ChangePasswordModal PasswordForm
             ├── legal/    ImpressumPage DatenschutzPage
             ├── dashboard/ DashboardView RevenueExpenseChart TaskList AbsenceThisWeek
             ├── crm/      CustomerListView CustomerDrawer CustomerFormModal ContactCards NoteTimeline NoteComposer
             ├── finance/  FinanceView InvoiceTable InvoiceDrawer InvoiceFormModal LineItemsEditor
             │             ExpenseTable ExpenseFormModal ExpenseCategoryBreakdown
-            ├── hr/       HrView EmployeeDirectory EmployeeCard EmployeeDrawer EmployeeFormModal
+            ├── hr/       HrView EmployeeDirectory EmployeeDrawer EmployeeFormModal
             │             LeaveTable LeaveRequestModal SickNoteModal HoursChart TimesheetModal
-            └── settings/ SettingsView CompanySettings UserAccounts UserFormModal
+            └── settings/ SettingsView CompanySettings UserAccounts UserFormModal PasswordRevealModal
 ```
 
 Regeln:
@@ -106,7 +115,7 @@ Regeln:
 
 ## 4. Docker
 
-### 4.1 `docker-compose.yml` (Soll)
+### 4.1 `docker-compose.yml` (Auszug, maßgeblich ist die Datei)
 
 ```yaml
 name: pitstop
@@ -160,7 +169,7 @@ services:
 
 `compose.dev.yml` ergänzt nur `db.ports: ["127.0.0.1:5432:5432"]` und wird ausschließlich lokal mit `-f docker-compose.yml -f compose.dev.yml` genutzt. **Kein** `docker-compose.override.yml`, weil Compose das automatisch auch in Produktion laden würde.
 
-### 4.2 Dockerfile (Soll)
+### 4.2 Dockerfile (maßgeblich ist die Datei)
 
 ```dockerfile
 FROM node:24-alpine AS build
@@ -240,9 +249,11 @@ absences(id, employee_id → employees, kind[vacation|sick], from_date, to_date,
 customers(id, number unique default nextval, name, kind, status, street, zip, city, phone, email, vat_id,
           payment_term_days, owner_employee_id → employees, tags text[], created_at)
 contacts(id, customer_id → customers on delete cascade, name, position, phone, email, is_primary)
+vehicles(id, customer_id → customers on delete cascade, plate, make, model, variant, vin, first_registration, mileage,
+         next_inspection, fuel[petrol|diesel|electric|hybrid|lpg], power_kw, notes, created_at)      -- Migration 002
 notes(id, customer_id → customers on delete cascade, kind, text, author_user_id → users null, created_at)
 
-invoices(id, number unique default nextval, customer_id → customers on delete restrict, issue_date, due_date,
+invoices(id, number unique default nextval, customer_id → customers on delete restrict, vehicle_id → vehicles null, mileage, issue_date, due_date,
          vat_rate, status[open|paid], paid_at, dunning_level 0–3, last_reminded_at, created_by_user_id, created_at)
 invoice_items(id, invoice_id → invoices on delete cascade, position, description, quantity, unit, unit_price_cents)
 expenses(id, date, supplier, category, description, net_cents, vat_rate[0|7|19], paid, created_by_user_id, created_at)
@@ -250,7 +261,9 @@ tasks(id, title, done, due_date, for_role, created_at)
 schema_migrations(version pk, applied_at)
 ```
 
-Indizes auf alle Fremdschlüssel sowie auf `invoices(status, due_date)` und `absences(employee_id, from_date)`.
+Indizes auf alle Fremdschlüssel sowie auf `invoices(status, due_date)`, `absences(employee_id, from_date)` und `lower(vehicles.plate)`.
+
+**Migration 002 (`002_werkstatt.sql`):** Umstellung auf Kfz-Werkstatt – Kundenart `property_mgmt` → `fleet`, Abteilungen `installation`/`planning`/`warehouse` → `workshop`/`tuning`/`parts`, Einheit `liter`, Tabelle `vehicles`, `invoices.vehicle_id` und `invoices.mileage`. Bestehende Daten werden mit umgeschrieben.
 
 ## 7. Server
 
@@ -278,13 +291,14 @@ Alle Routen unter `/api`, JSON. Fehlerformat `{ "error": { "code": "VALIDATION",
 | `GET /health` | öffentlich | `{ ok, db }` für den Healthcheck |
 | `GET /public/legal` | öffentlich | Impressum-Felder und Datenschutz-Markdown, Flag `demoMode` |
 | `GET /public/logo` | öffentlich | Logo aus `conf/` oder 404 |
-| `POST /auth/login` · `POST /auth/logout` · `GET /auth/me` | – | Sitzung |
+| `POST /auth/login` · `POST /auth/logout` · `GET /auth/me` | – | Sitzung. `/auth/me` antwortet ohne Sitzung mit 200 und `user: null` (kein 401, damit die Browser-Konsole sauber bleibt) |
 | `POST /auth/password` | angemeldet | Eigenes Passwort ändern (altes Passwort nötig) |
 | `GET /bootstrap` | angemeldet | Gesamtstand für die Rolle (Abschnitt 8.2) |
 | `POST /customers` · `PATCH /customers/:id` | `customer:edit` | Anlegen, Stammdaten oder Status ändern |
 | `POST /customers/:id/contacts` | `customer:edit` | Ansprechpartner |
+| `POST /customers/:id/vehicles` · `PATCH /vehicles/:id` | `customer:edit` | Fahrzeug anlegen bzw. ändern (Kennzeichen groß, FIN 17 Zeichen ohne I/O/Q) |
 | `POST /customers/:id/notes` | angemeldet | Notiz (Autor = Sitzung) |
-| `POST /invoices` | `finance:view` | Rechnung anlegen; Nummer aus der Sequenz, Summen rechnet nur der Client zur Anzeige |
+| `POST /invoices` | `finance:view` | Rechnung anlegen; Nummer aus der Sequenz. Optional `vehicleId` (muss zum Kunden gehören) und `mileage`; ein höherer km-Stand wird am Fahrzeug fortgeschrieben (Antwort enthält dann auch `vehicle`) |
 | `POST /invoices/:id/pay` · `POST /invoices/:id/remind` | `finance:view` | Bezahlt; Mahnstufe + Systemnotiz in **einer** Transaktion |
 | `POST /expenses` | `finance:view` | Ausgabe |
 | `POST /employees` · `PATCH /employees/:id` | `employee:edit` | Mitarbeiter anlegen und bearbeiten |
@@ -299,7 +313,7 @@ Alle Routen unter `/api`, JSON. Fehlerformat `{ "error": { "code": "VALIDATION",
 | `POST /demo/login` · `POST /demo/reset` | nur bei `DEMO_MODE=true`, sonst 404 | Ein-Klick-Login als Persona; alles zurücksetzen und neu seeden |
 
 ### 7.4 Logs
-pino schreibt JSON auf stdout (`docker compose logs`) und über `pino-roll` nach `logs/app/pitstop.log` (täglich rotiert, 14 Dateien). Request-Logs ohne Cookies und Bodies. Passwörter und Tokens nie loggen (`redact`).
+pino schreibt JSON auf stdout (`docker compose logs`) und über `pino-roll` nach `logs/app/pitstop.JJJJ-MM-TT.N.log` (täglich rotiert, 14 Dateien). Fastifys eigenes Request-Logging ist über `LogController` abgeschaltet (zur Laufzeit vorhanden, aber nicht typisiert, daher per `createRequire`); stattdessen ein kurzer `onResponse`-Eintrag je API-Aufruf. Request-Logs ohne Cookies und Bodies. Passwörter und Tokens nie loggen (`redact`).
 
 ### 7.5 CLI (`server/cli.ts`)
 `pitstop reset-password <email>`: erzeugt ein zufälliges Startpasswort (16 Zeichen), setzt `must_change_password`, löscht alle Sitzungen des Benutzers und gibt das Passwort auf stdout aus.
@@ -322,22 +336,24 @@ pino schreibt JSON auf stdout (`docker compose logs`) und über `pino-roll` nach
 
 ### 8.2 Daten im Client (`client/store/`)
 - `GET /api/bootstrap` liefert `AppData`: `me`, `company`, `demoMode`, `customers`, `contacts`, `notes`, `invoices`, `expenses`, `employees`, `absences`, `timesheets`, `tasks`. Für Mitarbeiter fehlen `invoices` und `expenses` (leere Arrays), Mitarbeiterfelder sind gefiltert.
-- `reducer.ts` kennt nur `bootstrap/loaded`, `entity/upsert` (`collection`, `item`) und `entity/remove`. Fachlogik steckt nicht im Reducer.
+- `reducer.ts` kennt nur `loaded`, `upsert` (`collection`, `item`), `remove`, `contacts/replace` (alle Kontakte eines Kunden) und `company`. Fachlogik steckt nicht im Reducer.
 - `mutations.ts` stellt je Aktion eine Funktion bereit (`createInvoice`, `decideAbsence`, …): API aufrufen, Antwort per `upsert` übernehmen, Toast zeigen, Fehler am Formular anzeigen. Betrifft eine Aktion mehrere Datensätze (Mahnen: Rechnung **und** Notiz), liefert die API beide zurück.
-- Abgleich mit anderen Nutzern: erneuter Bootstrap beim Zurückkehren in den Tab (`visibilitychange`) und alle 60 Sekunden. Für einen Kleinbetrieb reicht das. Ab einigen tausend Rechnungen werden Listen auf seitenweise Endpunkte umgestellt (offener Punkt in AGENTS.md).
+- Abgleich mit anderen Nutzern: erneuter Bootstrap beim Zurückkehren in den Tab (`visibilitychange`) und alle 60 Sekunden (nur bei sichtbarem Tab). Für einen Kleinbetrieb reicht das. Ab einigen tausend Rechnungen werden Listen auf seitenweise Endpunkte umgestellt (offener Punkt in AGENTS.md).
 - Abgeleitete Werte nur über `shared/selectors.ts`, nie in Komponenten nachrechnen.
 
 ### 8.3 Overlays und Tastatur
 - **Modal-Host** in `App.tsx`: `useModals().open('invoice', { customerId })`, `'customer'`, `'expense'`, `'absence'`, `'sick'`, `'employee'`, `'timesheet'`, `'user'`, `'password'`.
 - **Toasts** über `useToast().show({ title, action? })`.
-- **Befehlspalette:** `keydown` auf `window`, `(metaKey || ctrlKey) && key === 'k'`, `preventDefault()`. Suche über `searchIndex()` aus `shared/selectors.ts`; max. 5 Treffer je Gruppe; Kleinschreibung und Umlaute normalisiert.
+- **Befehlspalette:** `keydown` auf `window`, `(metaKey || ctrlKey) && key === 'k'`, `preventDefault()`. Suche über `search()` aus `shared/selectors.ts`; max. 5 Treffer je Gruppe; Kleinschreibung und Umlaute normalisiert.
 - Modal und Drawer: Esc schließt, Fokus aufs erste Feld, `role="dialog"`, `aria-modal`, `aria-labelledby`.
 
 ## 9. Demo-Modus und Seed (`server/demo/`)
 
 - Nur bei `DEMO_MODE=true` und nur bei leerer Datenbank (Erststart) oder über `POST /api/demo/reset`.
 - `seed.ts` schreibt den Demo-Betrieb aus [CONCEPT.md](CONCEPT.md) Abschnitt 2 und 11 in die Datenbank: Stammdaten von Hand definiert, Bewegungsdaten mit seedbarem PRNG (`random.ts`, mulberry32, Seed aus dem Datum), **relativ zu heute**. Sequenzen danach per `setval` auf das Maximum setzen.
-- Demo-Benutzer: `katrin.lindner@lindner-haustechnik.example` (Admin) und `jonas.weber@lindner-haustechnik.example` (Mitarbeiter), verknüpft mit den Demo-Mitarbeitern. Ihre Passwörter sind zufällig; angemeldet wird über `POST /api/demo/login`. Der Admin aus der `.env` existiert zusätzlich.
+- Demo-Benutzer: `katrin.lindner@lindner-motorsport.example` (Admin) und `jonas.weber@lindner-motorsport.example` (Mitarbeiter), verknüpft mit den Demo-Mitarbeitern. Ihre Passwörter sind zufällig; angemeldet wird über `POST /api/demo/login`. Der Admin aus der `.env` existiert zusätzlich.
+- Fahrzeuge: je Kunde aus `templates.ts`, dazu 140 erzeugte Laufkunden mit Alltagsautos (`walkInCustomers`). Kennzeichen und FIN zufällig, km-Stand aus Alter × Jahreslaufleistung je Kundenart, nächste HU zwischen −25 und +700 Tagen.
+- Aufträge: Größe (klein/mittel/groß) und Leistung gewichtet (`JOBS[].weight`), Kunde gewichtet nach passenden Fahrzeugen. `JOBS[].vehicles` filtert (`combustion`, `electric`, `sporty` = Verbrenner ab 180 kW). Inspektion, HU, Klima, Zahnriemen, Kupplung, Motor und Umbauten höchstens einmal je Fahrzeug (`ONCE_PER_VEHICLE`).
 - Reset: alle Fachtabellen und Sitzungen leeren (`TRUNCATE … RESTART IDENTITY CASCADE`), Seed und Admin neu anlegen, alle Clients landen auf der Anmeldeseite.
 
 ## 10. Berechnungen (`shared/`)
@@ -351,6 +367,10 @@ pino schreibt JSON auf stdout (`docker compose logs`) und über `pino-roll` nach
 | Euro-Eingabe | `"1.234,56"` → 123456; Punkt = Tausender, Komma = Dezimal; ungültig → `null` | `money.ts` `parseEuroInput` |
 | Überfällig | `status === 'open' && dueDate < today` | `selectors.ts` |
 | Aufgabe „mahnen“ | überfällig **und** `dunningLevel < 3` **und** (`lastRemindedAt` fehlt oder liegt über 14 Tage zurück) | `selectors.ts` |
+| Aufgabe „HU anbieten“ | Fahrzeug eines aktiven Kunden, `nextInspection` zwischen heute − 7 und heute + 14 Tagen (`INSPECTION_NOTICE_DAYS`) | `selectors.ts` |
+| HU-Status am Fahrzeug | überfällig (rot), ≤ 60 Tage (gelb), sonst grün (`inspectionState`) | `selectors.ts` |
+| Kennzeichen-Suche | Kleinschreibung, ohne Leer- und Bindestriche (`normalizePlate`): „rjw182“ findet „R-JW 182“ | `selectors.ts` |
+| km-Stand aus Rechnung | Nur nach oben fortschreiben (`raiseMileage`) | `server/repo/vehicles.ts` |
 | Mitarbeiterstatus | Krank, falls eine `sick`-Abwesenheit heute abdeckt; sonst Urlaub, falls eine genehmigte `vacation` heute abdeckt; sonst Im Dienst | `selectors.ts` |
 | Arbeitstage | Montag bis Freitag zwischen `from` und `to` inklusive | `dates.ts` `workdaysBetween` |
 | Resturlaub | Anspruch + Übertrag − genehmigte Urlaubstage im Kalenderjahr (beantragte separat) | `selectors.ts` |
@@ -367,19 +387,25 @@ Konventionen: Code englisch, Oberfläche deutsch (Zuordnung in `labels.ts`, Glos
 export type Role = 'admin' | 'employee';
 export interface User { id: string; email: string; displayName: string; role: Role; employeeId: string | null; active: boolean; mustChangePassword: boolean }
 export type CustomerStatus = 'active' | 'lead' | 'inactive';
-export type CustomerKind = 'private' | 'business' | 'property_mgmt' | 'public';
+export type CustomerKind = 'private' | 'business' | 'fleet' | 'public';
 export type NoteKind = 'note' | 'call' | 'email' | 'meeting' | 'system';
-export type Unit = 'hours' | 'piece' | 'meter' | 'flat';
+export type Unit = 'hours' | 'piece' | 'liter' | 'meter' | 'flat';
 export type InvoiceStatus = 'open' | 'paid';                         // 'overdue' nur berechnet
 export type ExpenseCategory = 'material' | 'vehicles' | 'rent' | 'payroll' | 'tools' | 'insurance' | 'office' | 'other';
-export type Department = 'management' | 'office' | 'service' | 'installation' | 'planning' | 'warehouse';
+export type Department = 'management' | 'office' | 'service' | 'workshop' | 'tuning' | 'parts';
+export type FuelType = 'petrol' | 'diesel' | 'electric' | 'hybrid' | 'lpg';
 export type ContractType = 'full_time' | 'part_time' | 'apprentice' | 'minijob';
 export type AbsenceKind = 'vacation' | 'sick';
 export type AbsenceStatus = 'requested' | 'approved' | 'rejected';
 export type EmployeeStatus = 'on_duty' | 'vacation' | 'sick';         // nur berechnet
 
+export interface Vehicle {
+  id: string; customerId: string; plate: string; make: string; model: string; variant: string; vin: string;
+  firstRegistration: string | null; mileage: number | null; nextInspection: string | null; // HU/AU
+  fuel: FuelType; powerKw: number | null; notes: string; createdAt: string;
+}
 export interface Invoice {
-  id: string; number: number; customerId: string; issueDate: string; dueDate: string;
+  id: string; number: number; customerId: string; vehicleId: string | null; mileage: number | null; issueDate: string; dueDate: string;
   items: InvoiceItem[]; vatRate: 19; status: InvoiceStatus; paidAt?: string;
   dunningLevel: 0 | 1 | 2 | 3; lastRemindedAt?: string; createdByUserId: string;
 }
@@ -429,7 +455,7 @@ Badge-Farben: emerald = bezahlt, aktiv, im Dienst, genehmigt · amber = offen, L
 cp .env-example .env                  # PUBLIC_URL=http://localhost:5173, Passwörter setzen
 docker compose -f docker-compose.yml -f compose.dev.yml up -d db
 npm install
-npm run dev:server                    # tsx watch, Port 3000, liest .env und .impressum per node --env-file
+npm run dev:server                    # tsx watch, Port 3000; config.ts liest .env und .impressum selbst (außer NODE_ENV=production)
 npm run dev:client                    # Vite auf 5173, Proxy /api → http://localhost:3000
 ```
 
@@ -441,7 +467,7 @@ npm run dev:client                    # Vite auf 5173, Proxy /api → http://loc
 | `lint` | ESLint |
 | `start` | `node dist/server/main.js` (so läuft es im Container) |
 
-Lokal teilen sich Entwicklung und ein per `docker compose up -d` gestartetes Pitstop auf diesem Rechner denselben `./db`-Ordner.
+Lokal teilen sich Entwicklung und ein per `docker compose up -d` gestartetes Pitstop auf diesem Rechner denselben `./db`-Ordner. Nach `npm run build` liefert auch `dev:server` den gebauten Client unter http://localhost:3000 aus.
 
 ## 14. Testen und Abnahme
 
@@ -451,10 +477,12 @@ Lokal teilen sich Entwicklung und ein per `docker compose up -d` gestartetes Pit
 | Build | `npm run build`, `docker compose build` | Ende jeder Phase |
 | API | Pro Route: angemeldet/abgemeldet, Admin/Mitarbeiter, ungültige Eingaben (`curl` oder kleines Skript). Jede 5xx-Antwort ist ein Fehler | Ab Phase 3 |
 | Konsole | Browser-Konsole ohne Fehler und React-Warnungen | Ende jeder Phase |
-| Abnahme | Demo-Drehbuch und Echtbetrieb-Drehbuch aus [CONCEPT.md](CONCEPT.md) Abschnitt 13 | Schlussphase |
+| Abnahme | Demo-Drehbuch und Echtbetrieb-Drehbuch aus [CONCEPT.md](CONCEPT.md) Abschnitt 13, automatisiert in `tests/e2e/` | Schlussphase und vor jedem Release |
 | README-Test | In `/tmp` frisch klonen und **genau** die README-Schritte ausführen: Setup, Update, Backup, Restore, Löschen. Mit `docker compose -p pitstop-test` und anderem `PITSTOP_PORT` | Schlussphase |
 
-## 15. Fallstricke (bekannt vor Beginn)
+**Browser-Drehbücher** (`tests/e2e/`): `demo.mjs` spielt CONCEPT.md 13.1 durch (braucht `DEMO_MODE=true` und frisch zurückgesetzte Demo-Daten), `echtbetrieb.mjs` die Schritte 1–8 von 13.2 (braucht einen frischen Stack mit `DEMO_MODE=false`, `IMPRESSUM_NAME="Test Haustechnik GmbH"` und `ADMIN_EMAIL`/`ADMIN_PASSWORD` als Umgebungsvariablen). Start mit `tests/e2e/run.sh demo.mjs http://localhost:8080`; Chromium kommt aus dem Image `mcr.microsoft.com/playwright:v1.49.1-noble`, Screenshots landen in `tests/e2e/shots/`. Ergebnis 2026-11-19: beide grün, Konsole ohne Fehler.
+
+## 15. Fallstricke
 
 - **`npm create vite … --overwrite` im Ordner `pitstop/` löscht die Doku.** In `/tmp` scaffolden und nur die benötigten Dateien übernehmen (Struktur weicht ohnehin ab: Client liegt unter `src/client`).
 - **Postgres ab 18 im Docker-Image:** Volume auf `/var/lib/postgresql` mounten, **nicht** auf `/var/lib/postgresql/data`. Die Daten liegen dann in `./db/18/docker`. Dadurch landet ein Hauptversionswechsel sauber in `./db/19/…`.
@@ -477,3 +505,11 @@ Lokal teilen sich Entwicklung und ein per `docker compose up -d` gestartetes Pit
 - **Strg+K** belegt im Browser die Adressleisten-Suche: Listener auf `window` mit `preventDefault()`.
 - **Secure-Cookie über http:** Steht `PUBLIC_URL` auf https, aber der Aufruf kommt per http, setzt der Browser das Cookie nicht, und der Login scheint wirkungslos.
 - **WSL2:** Projekt im Linux-Dateisystem lassen, nicht nach `/mnt/c`, sonst sind Datei-Watching und Bind-Mounts unzuverlässig.
+- **TypeScript 7** (nativer Compiler) wird von typescript-eslint noch nicht unterstützt; bei `typescript@~6.0` bleiben, bis typescript-eslint es erlaubt.
+- **Euro-Beträge enthalten ein geschütztes Leerzeichen** (U+00A0 vor „€“, von `Intl`). Tests und Textvergleiche per Regex auf die Zahl, nicht auf „45,00 €“ mit normalem Leerzeichen.
+- **Breite von Eingabefeldern:** `Input`/`Select` setzen `w-full`, außer `className` enthält selbst eine `w-…`-Klasse. Sonst entscheidet die CSS-Reihenfolge zwischen `w-full` und z. B. `w-auto`.
+- **`pkill -f <muster>` trifft die eigene Shell,** wenn das Muster im Befehl steht. Mit Zeichenklasse arbeiten: `pkill -f 'src/server/main[.]ts'`.
+- **`cp` ist auf dem Entwicklungsrechner ein Alias für `cp -i`** und überschreibt ohne Eingabe nichts. In Skripten `command cp -f` verwenden.
+- **`.gitignore`-Muster für Laufzeitordner an der Wurzel verankern** (`/db/`, `/data/` …): Ein Muster `db/` ignoriert sonst auch `src/server/db/` mit allen Migrationen – ein Klon ließe sich nicht bauen.
+- **firewalld aus einer anderen WSL-Distribution** (nftables-Tabelle `inet firewalld`) gilt für alle Distributionen und weist Verkehr zwischen Containern ab (`EHOSTUNREACH`, App findet `db` nicht). Prüfen mit `nft list tables`; firewalld dort beenden oder Docker-Bridges freigeben (`iifname "br-*" accept`).
+- **Docker-Build dauert unter WSL2 3–5 Minuten,** sobald sich Code ändert (Vite + esbuild im Container). Ohne Codeänderung wenige Sekunden (Cache).

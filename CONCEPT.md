@@ -1,8 +1,8 @@
 # Pitstop – Konzept
 
-Arbeitstitel: **Pitstop – Business OS**. Selbst gehostetes All-in-One-ERP/CRM für kleine und mittlere Betriebe. Diese Datei beschreibt das *Was* (Fachlichkeit, Bildschirme, Regeln). Das *Wie* steht in [TECHNICAL.md](TECHNICAL.md), Betrieb und Installation in [README.md](README.md), der Arbeitsstand in [AGENTS.md](AGENTS.md), die Projektkarte in [CLAUDE.md](CLAUDE.md).
+Arbeitstitel: **Pitstop – Business OS**. Selbst gehostetes All-in-One-ERP/CRM für **Kfz-Werkstätten mit Tuning** (Werkstatt, Reifen, HU, Leistungssteigerung, Fuhrparkkunden). Diese Datei beschreibt das *Was* (Fachlichkeit, Bildschirme, Regeln). Das *Wie* steht in [TECHNICAL.md](TECHNICAL.md), Betrieb und Installation in [README.md](README.md), der Arbeitsstand in [AGENTS.md](AGENTS.md), die Projektkarte in [CLAUDE.md](CLAUDE.md).
 
-Stand: 2026-11-19, vor Beginn der Umsetzung. Grundlage ist der Auftrag (Abschnitt 15). Wo er offen war, wurde ein Default gewählt und in Abschnitt 14 festgehalten.
+Stand: 2026-11-19, umgesetzt (Version 0.1). Grundlage ist der Auftrag (Abschnitt 15). Wo er offen war, wurde ein Default gewählt und in Abschnitt 14 festgehalten.
 
 ## 1. Ziel und Abgrenzung
 
@@ -31,28 +31,28 @@ Stand: 2026-11-19, vor Beginn der Umsetzung. Grundlage ist der Auftrag (Abschnit
 
 Der Demo-Modus ist **nicht für echte Daten** gedacht: Jeder, der die Seite erreicht, kann sich mit einem Klick als Admin anmelden.
 
-**Demo-Betrieb:** ein erfundener mittelständischer Handwerksbetrieb.
+**Demo-Betrieb:** eine erfundene Kfz-Werkstatt mit Tuning-Abteilung.
 
 | Feld | Wert |
 |---|---|
-| Firma | Lindner Haustechnik GmbH |
-| Branche | Sanitär, Heizung, Klima (SHK), Wärmepumpen, Badsanierung, Kundendienst |
+| Firma | Lindner Motorsport GmbH |
+| Branche | Kfz-Meisterbetrieb: Inspektion, Reparatur, Reifen, HU/AU, Unfall, Fuhrparkservice; Tuning & Performance (Software, Fahrwerk, Abgasanlagen, Prüfstand, Eintragung) |
 | Sitz | Gewerbering 14, 93055 Regensburg |
-| Größe | 18 Mitarbeitende, rund 150.000 € Netto-Umsatz im Monat |
-| Abteilungen | Geschäftsführung, Verwaltung, Kundendienst, Montage, Planung, Lager |
-| Kundenarten | Privat, Gewerbe, Hausverwaltung, Öffentliche Hand |
+| Größe | 18 Mitarbeitende, rund 170.000 € Netto-Umsatz im Monat |
+| Abteilungen | Geschäftsführung, Büro & Verwaltung, Serviceannahme, Werkstatt, Tuning & Performance, Teile & Lager |
+| Kundenarten | Privat, Gewerbe, Fuhrpark, Öffentliche Hand |
 
 **Feste Demo-Figuren** (auf sie verweisen Aufgaben und Drehbuch, deshalb nicht umbenennen):
 
 | Person | Rolle im Betrieb | Rolle in der App |
 |---|---|---|
-| Katrin Lindner | Geschäftsführerin | Demo-Benutzer **Admin** |
-| Jonas Weber | Anlagenmechaniker SHK, Kundendienst | Demo-Benutzer **Mitarbeiter** |
-| Max Mustermann | Kundendiensttechniker | Hat einen offenen Urlaubsantrag |
+| Katrin Lindner | Geschäftsführerin, Kfz-Meisterin | Demo-Benutzer **Admin** |
+| Jonas Weber | Kfz-Mechatroniker, Werkstatt | Demo-Benutzer **Mitarbeiter** |
+| Max Mustermann | Kfz-Mechatroniker | Hat einen offenen Urlaubsantrag |
 | Sabine Huber | Buchhaltung, Verwaltung | Autorin vieler Kundennotizen |
 
 **Feste Demo-Datensätze:**
-- Rechnung **#1042** an „Hausverwaltung Sommer & Partner GmbH“, seit über 20 Tagen überfällig, Mahnstufe 0.
+- Rechnung **#1042** an „Mietwagen Sommer & Partner GmbH“ (Fuhrpark-Check und Bremsen am Transporter), seit über 20 Tagen überfällig, Mahnstufe 0.
 - Ein offener Urlaubsantrag von **Max Mustermann** über 5 Arbeitstage in drei Wochen.
 - Zwei weitere offene Urlaubsanträge, ein abgelehnter, mehrere genehmigte.
 - Ein Mitarbeiter ist heute krank, zwei sind heute im Urlaub.
@@ -149,8 +149,9 @@ Größtenteils **aus den Daten abgeleitet** und dadurch immer aktuell:
 | Quelle | Aufgabe | Aktion in der Zeile | Sichtbar für |
 |---|---|---|---|
 | Urlaubsantrag „beantragt“ | „Urlaubsantrag von Max Mustermann genehmigen (12.–16.01., 5 Tage)“ | Genehmigen / Ablehnen | Admin |
-| Rechnung überfällig, Mahnstufe < 3, letzte Mahnung fehlt oder ist über 14 Tage alt | „Überfällige Rechnung #1042 mahnen (Hausverwaltung Sommer & Partner, 2.380,00 €, 23 Tage)“ | Mahnen | Admin |
-| Lead ohne Kontakt seit > 14 Tagen | „Lead Bäckerei Hartl nachfassen“ | Öffnen (Kunden-Drawer) | Admin und zuständiger Mitarbeiter |
+| Rechnung überfällig, Mahnstufe < 3, letzte Mahnung fehlt oder ist über 14 Tage alt | „Überfällige Rechnung #1042 mahnen (Mietwagen Sommer & Partner, 2.380,00 €, 23 Tage)“ | Mahnen | Admin |
+| HU eines Fahrzeugs (aktiver Kunde) in den nächsten 14 Tagen fällig oder seit bis zu 7 Tagen überfällig | „HU für R-AB 123 anbieten (VW Golf · Kunde · fällig in 9 Tagen)“ | Öffnen (Kunden-Drawer) | Admin und zuständiger Mitarbeiter |
+| Lead ohne Kontakt seit > 14 Tagen | „Lead Bäckerei Hartl GmbH nachfassen“ | Öffnen (Kunden-Drawer) | Admin und zuständiger Mitarbeiter |
 | Eigener Antrag entschieden | „Dein Urlaubsantrag (02.–06.03.) wurde genehmigt“ | Erledigt | Antragsteller |
 | Manuelle Aufgabe | z. B. „Quartalsmeldung Berufsgenossenschaft prüfen“ | Abhaken | Admin; anlegen über ein Eingabefeld am Ende der Liste |
 
@@ -162,8 +163,8 @@ Solange Firmendaten, Mitarbeitende oder Kunden fehlen, zeigt das Dashboard dem A
 ## 7. Modul Kundenakten (CRM)
 
 ### 7.1 Kundenliste
-- Tabelle: Kunde (Name und Kundenart), Kundennummer, Ort, Hauptansprechpartner, Status-Badge, offener Betrag (nur Admin), letzter Kontakt (relativ, z. B. „vor 3 Tagen“).
-- **Suche** über Name, Kundennummer, Ort und Ansprechpartner, sofort beim Tippen.
+- Tabelle: Kunde (Name und Kundenart), Kundennummer, Ort, **Fahrzeuge (Kennzeichen)**, Hauptansprechpartner, Status-Badge, offener Betrag (nur Admin), letzter Kontakt (relativ, z. B. „vor 3 Tagen“).
+- **Suche** über Name, **Kennzeichen** (auch ohne Leer- und Bindestrich, z. B. „rjw182“), Kundennummer, Ort und Ansprechpartner, sofort beim Tippen.
 - **Statusfilter** als Segment-Schalter mit Anzahl: Alle · Aktiv · Lead · Inaktiv. Zusätzlicher Filter Kundenart. Sortierung per Klick auf Name, Ort und letzten Kontakt.
 - „Neuer Kunde“ (nur Admin).
 
@@ -171,9 +172,10 @@ Solange Firmendaten, Mitarbeitende oder Kunden fehlen, zeigt das Dashboard dem A
 Ein Klick auf eine Zeile öffnet einen Drawer von rechts (etwa 640 px; die Liste bleibt sichtbar, URL direkt aufrufbar). Kopf: Name, Kundennummer, Status-Badge (für Admin als Dropdown), Schnellaktionen „Rechnung erstellen“ (Kunde vorausgewählt) und „Notiz“. Tabs:
 
 1. **Übersicht:** Anschrift, Telefon, E-Mail, USt-IdNr. (Gewerbe), Kundenart, Zahlungsziel, Kunde seit, zuständiger Mitarbeiter, Tags; Admin kann bearbeiten. Kennzahlen (nur Admin): Umsatz gesamt, offen, Anzahl Rechnungen.
-2. **Ansprechpartner:** Karten mit Name, Funktion, Telefon, E-Mail; Hauptkontakt markiert. Admin kann hinzufügen.
-3. **Historie:** Zeitleiste mit Notizen, Anrufen, E-Mails, Terminen und Systemeinträgen (z. B. „Mahnung Stufe 1 zu #1042“), neueste oben. Oben ein Eingabefeld mit Typauswahl (Notiz, Anruf, E-Mail, Termin) und „Speichern“ (Strg+Enter). Autor ist der angemeldete Benutzer.
-4. **Rechnungen** (nur Admin): alle Rechnungen des Kunden mit Nummer, Datum, Brutto und Status, Summenzeile. Ein Klick öffnet die Rechnungsvorschau.
+2. **Fahrzeuge:** Karte je Fahrzeug mit Kennzeichen (im Nummernschild-Stil), Marke/Modell/Variante, km-Stand, Kraftstoff, Leistung (kW/PS), Erstzulassung, FIN, Notizen zu Umbauten und Eintragungen sowie HU-Status (grün, gelb ab 60 Tagen vorher, rot überfällig). Darunter die letzte Rechnung des Fahrzeugs und „Rechnung“ (mit vorausgewähltem Fahrzeug). Admin legt Fahrzeuge an und bearbeitet sie.
+3. **Ansprechpartner:** Karten mit Name, Funktion, Telefon, E-Mail; Hauptkontakt markiert. Admin kann hinzufügen.
+4. **Historie:** Zeitleiste mit Notizen, Anrufen, E-Mails, Terminen und Systemeinträgen (z. B. „Mahnung Stufe 1 zu #1042“), neueste oben. Oben ein Eingabefeld mit Typauswahl (Notiz, Anruf, E-Mail, Termin) und „Speichern“ (Strg+Enter). Autor ist der angemeldete Benutzer.
+5. **Rechnungen** (nur Admin): alle Rechnungen des Kunden mit Nummer, Datum, Brutto und Status, Summenzeile. Ein Klick öffnet die Rechnungsvorschau.
 
 ### 7.3 Neuer Kunde (Modal)
 Pflicht: Name, Kundenart, Status (Default Lead), PLZ und Ort. Optional: Straße, Telefon, E-Mail, USt-IdNr., Zahlungsziel (Default aus den Firmendaten, sonst 14 Tage), zuständiger Mitarbeiter, erster Ansprechpartner. Die Kundennummer wird automatisch vergeben. Nach dem Speichern öffnet sich der Drawer des neuen Kunden.
@@ -183,23 +185,24 @@ Pflicht: Name, Kundenart, Status (Default Lead), PLZ und Ort. Optional: Straße,
 Zwei Tabs: **Rechnungen** und **Ausgaben**, jeweils mit drei kleinen Summen im Kopf (z. B. offen, überfällig, bezahlt in diesem Monat).
 
 ### 8.1 Rechnungsliste
-- Spalten: Nummer (#1042), Kunde, Rechnungsdatum, fällig am, Netto, Brutto, Status-Badge, Aktionen.
+- Spalten: Nummer (#1042), Kunde mit Kennzeichen, Rechnungsdatum, fällig am, Netto, Brutto, Status-Badge, Aktionen. Suche auch nach Kennzeichen.
 - **Status:** *Bezahlt* (grün), *Offen* (gelb), *Überfällig* (rot, „seit X Tagen“). „Überfällig“ wird berechnet (offen und Fälligkeit vor heute). Mahnstufe als Zusatz „M1“ bis „M3“.
 - Filter Alle · Offen · Überfällig · Bezahlt; Suche nach Nummer oder Kunde; Zeitraum (dieser Monat, letzte 3 Monate, alle).
 - Zeilenaktionen: „Als bezahlt markieren“ (Datum heute), „Mahnen“ (nur überfällig; Mahnstufe +1 bis 3, Systemeintrag in der Kundenhistorie), „Kunde öffnen“.
-- **Rechnungsvorschau** im Drawer: Briefkopf aus den Firmendaten, Empfänger, Positionen, Summen, Zahlungsziel, Bankverbindung, Fußtext, Status-Historie. Rein lesend.
+- **Rechnungsvorschau** im Drawer: Briefkopf aus den Firmendaten, Empfänger, Fahrzeugblock (Fahrzeug, Kennzeichen, FIN, km-Stand), Positionen, Summen, Zahlungsziel, Bankverbindung, Fußtext, Status-Historie. Rein lesend.
 
 ### 8.2 Neue Rechnung (Modal)
 - **Kunde:** durchsuchbare Auswahl (Aktiv und Lead). Aus dem Kunden-Drawer vorausgewählt.
 - **Rechnungsdatum** (Default heute), **Zahlungsziel** in Tagen (Default vom Kunden), daraus „fällig am“.
-- **Positionen** als editierbare Tabelle: Beschreibung, Menge (Dezimalkomma, z. B. 2,5), Einheit (Std., Stk., m, pauschal), Einzelpreis netto, Zeilensumme. „Position hinzufügen“, Zeile entfernen (mindestens eine bleibt). Vorlagen-Dropdown mit typischen Positionen (z. B. „Arbeitszeit Monteur, Std., 68,00 €“, „Anfahrtspauschale, pauschal, 45,00 €“).
+- **Fahrzeug** des Kunden (optional; hat der Kunde nur eins, ist es vorausgewählt) und **km-Stand bei Auftrag** (vorbelegt mit dem letzten Stand; ein höherer Wert wird am Fahrzeug fortgeschrieben).
+- **Positionen** als editierbare Tabelle: Beschreibung, Menge (Dezimalkomma, z. B. 2,5), Einheit (Std., Stk., l, m, pauschal), Einzelpreis netto, Zeilensumme. „Position hinzufügen“, Zeile entfernen (mindestens eine bleibt). Vorlagen-Dropdown mit typischen Werkstattleistungen (z. B. „Arbeitszeit Kfz-Mechatroniker, Std., 112,00 €“, „Räderwechsel, pauschal, 59,00 €“, „Motoröl 5W-30, l, 16,90 €“, „Softwareoptimierung Stage 1“).
 - **Summenblock** live: Netto, zzgl. 19 % MwSt., **Brutto**.
 - Validierung: Kunde gewählt, jede Position mit Beschreibung, Menge > 0, Preis ≥ 0, Brutto > 0. Fehler am Feld; „Speichern“ erst danach aktiv. Der Server prüft dasselbe noch einmal.
 - Speichern vergibt die nächste Rechnungsnummer, Status Offen. Die Rechnung ist sofort sichtbar in der Liste, im Kunden-Drawer, in „Offene Rechnungen“ und je nach Datum im Monatsumsatz und Diagramm.
 
 ### 8.3 Ausgaben
 - Spalten: Belegdatum, Lieferant, Kategorie (farbiges Badge), Beschreibung, Netto, MwSt.-Satz, Brutto, bezahlt.
-- Kategorien: Material, Fahrzeuge, Miete & Nebenkosten, Löhne & Gehälter, Werkzeug & Maschinen, Versicherungen, Büro & IT, Sonstiges.
+- Kategorien: Teile & Material, Fahrzeuge & Ersatzwagen, Miete & Nebenkosten, Löhne & Gehälter, Werkzeug & Geräte, Versicherungen, Büro & IT, Sonstiges.
 - Filter nach Kategorie und Zeitraum, Suche nach Lieferant, kleine Aufteilung „Ausgaben nach Kategorie“.
 - **Neue Ausgabe** (Modal): Datum, Lieferant, Kategorie, Beschreibung, Netto, MwSt.-Satz (19 %, 7 %, 0 %), bezahlt; Brutto wird angezeigt.
 
@@ -244,23 +247,24 @@ Firmenname, Anschrift, Telefon, E-Mail, Website, USt-IdNr., Steuernummer, Bank, 
 
 | Bereich | Umfang | Hinweise |
 |---|---|---|
-| Mitarbeitende | 18 | GF 1, Verwaltung 3, Kundendienst 4, Montage 6, Planung 2, Lager 1, dazu 1 Auszubildender in der Montage. Stundensätze 15–48 € |
-| Kunden | 32 | 20 Aktiv, 7 Leads, 5 Inaktiv; Privat, Gewerbe, Hausverwaltung und Öffentliche Hand im Raum Regensburg |
-| Ansprechpartner | 1–3 je Gewerbe- oder Verwaltungskunde | Privatkunden: die Person selbst |
-| Notizen | 2–8 je Kunde | Realistisch („Angebot Wärmepumpe besprochen, Rückruf KW 48“) |
-| Rechnungen | ca. 20–30 je Monat über 6 Monate | Ab #1001; ältere fast alle bezahlt, jüngere offen, einige überfällig |
+| Mitarbeitende | 18 | GF 1, Büro 2, Serviceannahme 3, Werkstatt 9 (inkl. Karosserie, Reifenservice, 1 Azubi), Tuning 2, Teile & Lager 1. Stundensätze 9 € (Azubi) bis 48 € |
+| Kunden | 36 benannte + 140 Laufkunden | Benannt: 24 Aktiv, 7 Leads, 5 Inaktiv (Fuhrparks wie Mietwagen, Pflegedienst, Taxi, Kurierdienst; Gewerbe; Öffentliche Hand; Tuning-Kunden). Laufkunden: erzeugte Privatkunden mit Alltagsautos, 90 % aktiv |
+| Fahrzeuge | rund 210 | Kennzeichen R-/KEH-, FIN, km-Stand passend zu Alter und Nutzung, HU-Termine verteilt; Tuning-Fahrzeuge mit Notizen zu Umbauten |
+| Ansprechpartner | 1–3 je Firmenkunde | Privatkunden: die Person selbst |
+| Notizen | 2–6 je aktivem Kunden | Realistisch („Angebot Stage 1 + Abgasanlage besprochen, Rückruf KW 48“, „Winterräder lagern bei uns, Regal C-14“) |
+| Rechnungen | ca. 100 je Monat über 6 Monate, jede mit Fahrzeug und km-Stand | Fortlaufend nummeriert, so dass #1042 die überfällige Sommer-Rechnung ist (Nummern beginnen deshalb unter 1000); ältere bezahlt, jüngere offen, vier überfällig (eine davon frisch gemahnt) |
 | Ausgaben | ca. 15–25 je Monat | Löhne monatlich als Sammelposten, Material häufig, Miete und Leasing fix |
 | Abwesenheiten | ca. 25 | Vergangene genehmigte Urlaube, 3 beantragte, 1 abgelehnter, aktuelle Krankmeldung |
 | Stunden | 6 Monate je Mitarbeitendem | Ist schwankt um das Soll von −8 bis +15 Stunden |
 | Manuelle Aufgaben | 3–5 | Für Admin |
-| Firmendaten | vollständig | Lindner Haustechnik GmbH mit Beispiel-Bankverbindung |
+| Firmendaten | vollständig | Lindner Motorsport GmbH mit Beispiel-Bankverbindung |
 
-**Typische Rechnungsinhalte** (auch für die Positionsvorlagen): Heizungswartung (180–450 €), Notdienst Rohrbruch (300–1.200 €), Austausch Therme (6.000–12.000 €), Badsanierung (8.000–25.000 €), Wärmepumpe inklusive Montage (18.000–35.000 €), Wartungsvertrag Hausverwaltung (Pauschale je Objekt). Gewerbe- und Verwaltungskunden zahlen eher spät, Privatkunden eher pünktlich.
+**Typische Rechnungsinhalte:** Inspektion mit Öl und Filtern (250–450 €), Räderwechsel und Einlagerung, HU/AU-Vorbereitung, Klimaservice, Diagnose, Bremsen (500–900 €), Zahnriemen (1.000–1.500 €), Kupplung (1.700–2.500 €), Fuhrpark-Check (UVV), Elektro-Inspektion; Tuning: Gewindefahrwerk mit Eintragung (2.500–3.500 €), Softwareoptimierung Stage 1 (1.100–1.500 €), Stage 2 mit Downpipe, Abgasanlage und Einzelabnahme (6.000–10.000 €), Motorsport-Event-Service; Unfallinstandsetzung und Motorüberholung (5.000–12.000 €). Leistungen passen zum Fahrzeug: Tuning nur an sportlichen Verbrennern (ab 180 kW), kein Ölwechsel an Elektroautos; Inspektion, HU, Zahnriemen und Umbauten höchstens einmal je Fahrzeug im Halbjahr. Fuhrpark- und Gewerbekunden zahlen eher spät, Privatkunden eher pünktlich.
 
 **Regeln:**
 - Alles erfunden: keine echten Firmen, Personen, IBANs oder Steuernummern; offensichtliche Beispielwerte (USt-IdNr. `DE123456789`, Domains auf `.example`).
 - Zeitbezogene Daten liegen **relativ zum Tag des Seeds** und sind deterministisch (gleicher Tag, gleiche Daten).
-- Plausible Kennzahlen: Monatsumsatz netto 120.000–180.000 €, Ausgaben meist 10–25 % darunter; ein Verlustmonat ist erlaubt.
+- Plausible Kennzahlen: Monatsumsatz netto 160.000–190.000 €, Ausgaben 18–27 % darunter (Löhne als Sammelposten aus Stundensatz × Sollstunden, Teile 20–27 % des Umsatzes).
 
 ## 12. Sprache, Formate, Ton
 
@@ -276,11 +280,11 @@ Voraussetzung: `DEMO_MODE=true`, frisch gestartet.
 
 1. Anmeldeseite → „Als Admin ansehen“. Dashboard mit 4 KPIs, dem Diagramm über 6 Monate und den Aufgaben, darunter Max Mustermanns Urlaubsantrag und die überfällige Rechnung #1042.
 2. Beim Urlaubsantrag „Genehmigen“ klicken: Die Aufgabe verschwindet, ein Toast erscheint. Unter Personal → Urlaub steht der Antrag auf Genehmigt, in Max' Personalakte ist der Resturlaub um 5 Tage kleiner.
-3. Bei #1042 „Mahnen“ klicken: Die Aufgabe verschwindet, die Rechnung zeigt M1. In der Historie von „Hausverwaltung Sommer & Partner GmbH“ steht der Systemeintrag.
-4. Strg+K, „Sommer“, Enter: Der Kunden-Drawer öffnet sich. Eine Notiz vom Typ Anruf anlegen; sie steht oben in der Historie.
-5. Im Drawer „Rechnung erstellen“: Der Kunde ist vorausgewählt. Zwei Positionen anlegen (eine per Vorlage, eine mit Menge 2,5) und die Summen prüfen (Netto + 19 % = Brutto, centgenau). Nach dem Speichern steht die Rechnung im Drawer-Tab, in Finanzen → Rechnungen als Offen, und „Offene Rechnungen“ ist gestiegen.
+3. Bei #1042 „Mahnen“ klicken: Die Aufgabe verschwindet, die Rechnung zeigt M1. In der Historie von „Mietwagen Sommer & Partner GmbH“ steht der Systemeintrag.
+4. Strg+K, „Sommer“, Enter: Der Kunden-Drawer öffnet sich. Eine Notiz vom Typ Anruf anlegen; sie steht oben in der Historie. Danach Strg+K mit einem Kennzeichen (ohne Leerzeichen): Der Kunde öffnet sich, im Tab Fahrzeuge steht das Auto.
+5. Im Drawer „Rechnung erstellen“: Der Kunde ist vorausgewählt. Fahrzeug wählen (km-Stand wird vorbelegt), zwei Positionen anlegen (Vorlage „Räderwechsel“ und 2,5 Std. Arbeitszeit) und die Summen prüfen (339,00 € + 19 % = 403,41 €, centgenau). Die Vorschau zeigt den Fahrzeugblock. Nach dem Speichern steht die Rechnung im Drawer-Tab, in Finanzen → Rechnungen als Offen, und „Offene Rechnungen“ ist gestiegen.
 6. Finanzen → Ausgaben: eine Ausgabe im laufenden Monat anlegen; der Ausgaben-Balken im Dashboard wächst.
-7. Kunden → „Neuer Kunde“ als Lead anlegen, Filter „Lead“ prüfen.
+7. Kunden → „Neuer Kunde“ als Lead anlegen, im Tab Fahrzeuge ein Fahrzeug hinzufügen, Filter „Lead“ prüfen.
 8. Benutzermenü → „Als Mitarbeiter ansehen“ (Jonas Weber): Finanzen und Einstellungen fehlen, `#/finanzen` zeigt „Kein Zugriff“, Stundensätze sind ausgeblendet, das Dashboard zeigt die Mitarbeiter-KPIs. „+ Neu → Urlaubsantrag“ für nächste Woche stellen.
 9. Zurück zu Admin: Der Antrag von Jonas steht in den Aufgaben. Mit Begründung ablehnen.
 10. Seite neu laden und in einem zweiten Browser öffnen: Alle Änderungen sind da. „Demo-Daten zurücksetzen“ stellt den Ausgangszustand wieder her.
@@ -305,7 +309,7 @@ Voraussetzung: frischer Klon, Installation genau nach README mit `DEMO_MODE=fals
 
 | # | Frage | Default / Entscheidung |
 |---|---|---|
-| E1 | Branche der Demo-Daten: SHK-Betrieb oder z. B. Kfz-Werkstatt (passt zum Namen „Pitstop“)? | SHK-Betrieb „Lindner Haustechnik GmbH“ |
+| E1 | Branche | **Entschieden 2026-11-19:** Kfz-Werkstatt mit Tuning („Lindner Motorsport GmbH“); Fahrzeuge sind Teil der Kundenakte |
 | E2 | Produktname in der Oberfläche | Seitenleiste: Firmenname aus den Firmendaten (Fallback „Pitstop“); Fenstertitel „Pitstop – Business OS“ |
 | E3 | Detailansichten als Drawer oder eigene Seite? | Drawer, per URL direkt aufrufbar |
 | E4 | Netto oder brutto für den Monatsumsatz? | Netto (Umsatz); offene Posten brutto (Forderung) |

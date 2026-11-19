@@ -1,0 +1,67 @@
+# Pitstop – Business OS
+# Setup, Update, Backup und Löschen: siehe README.md
+name: pitstop
+
+services:
+  db:
+    image: postgres:18-alpine
+    # Holt bei jedem `docker compose up -d` die neueste 18.x (Sicherheitsupdates).
+    # Eine neue Hauptversion nur nach README, Abschnitt "Sonderfall: neue Postgres-Hauptversion".
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pitstop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD in der .env setzen}
+      POSTGRES_DB: ${POSTGRES_DB:-pitstop}
+      TZ: ${TZ:-Europe/Berlin}
+    # Das Log-Verzeichnis gehört sonst root: erst chown, dann das normale Entrypoint (gibt Rechte ab).
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        mkdir -p /var/log/postgresql &&
+        chown postgres:postgres /var/log/postgresql &&
+        exec docker-entrypoint.sh postgres
+        -c logging_collector=on
+        -c log_directory=/var/log/postgresql
+        -c log_filename=postgresql-%a.log
+        -c log_truncate_on_rotation=on
+        -c log_rotation_age=1d
+    volumes:
+      # Ab Postgres 18 auf /var/lib/postgresql mounten (Daten landen in ./db/18/docker).
+      - ./db:/var/lib/postgresql
+      - ./logs/postgres:/var/log/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  app:
+    build: .
+    image: pitstop-app:local
+    # Baut bei jedem `docker compose up -d` neu (aus dem Cache) – Update = git pull + up -d.
+    pull_policy: build
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: true
+      - path: .impressum
+        required: false
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER:-pitstop}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-pitstop}
+      TZ: ${TZ:-Europe/Berlin}
+    ports:
+      - "${PITSTOP_PORT:-8080}:3000"
+    volumes:
+      - ./data:/app/data
+      - ./logs/app:/app/logs
+      - ./conf:/app/conf:ro

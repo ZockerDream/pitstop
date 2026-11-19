@@ -4,9 +4,9 @@
 
 Diese Datei ist die **Landkarte** des Projekts. Mit ihr findest du nach langer Pause oder in einer neuen Sitzung die richtige Datei, ohne den ganzen Code zu lesen. Den Arbeitsstand liefert [AGENTS.md](AGENTS.md) (oben automatisch eingebunden). Das *Was* steht in [CONCEPT.md](CONCEPT.md), das *Wie* in [TECHNICAL.md](TECHNICAL.md), der Betrieb in [README.md](README.md).
 
-**Pitstop – Business OS:** selbst gehostetes ERP/CRM für kleine Betriebe. React-SPA (Vite, TypeScript, Tailwind v4, recharts, lucide-react) und Fastify-API in **einem** Container `app`, dazu PostgreSQL 18 im Container `db`, gestartet per Docker Compose. Echte Anmeldung mit den Rollen Admin und Mitarbeiter. Module: Dashboard, Kunden (CRM), Finanzen (ERP), Personal (HR), Einstellungen. Der optionale Demo-Modus (`DEMO_MODE=true`) bringt den Demo-Betrieb Lindner Haustechnik GmbH mit.
+**Pitstop – Business OS:** selbst gehostetes ERP/CRM für Kfz-Werkstätten mit Tuning. React-SPA (Vite, TypeScript, Tailwind v4, recharts, lucide-react) und Fastify-API in **einem** Container `app`, dazu PostgreSQL 18 im Container `db`, gestartet per Docker Compose. Echte Anmeldung mit den Rollen Admin und Mitarbeiter. Module: Dashboard, Kunden (CRM), Finanzen (ERP), Personal (HR), Einstellungen. Der optionale Demo-Modus (`DEMO_MODE=true`) bringt den Demo-Betrieb Lindner Motorsport GmbH mit (rund 180 Kunden, 210 Fahrzeuge).
 
-> **Stand des Graphen:** Soll-Architektur, Code existiert noch nicht (2026-11-19). ⏳ = geplant, ✅ = umgesetzt. Beim Umsetzen Status und Pfade nachziehen (AGENTS.md Schritt 10.5).
+> **Stand des Graphen:** Ist-Stand Version 0.1 (2026-11-19), alle Knoten umgesetzt (✅). Neue Dateien hier eintragen; ⏳ markiert Geplantes.
 
 ## Lesereihenfolge
 
@@ -31,8 +31,8 @@ flowchart LR
   browser["Browser"] -->|"HTTP :8080"| app
   proxy["Reverse-Proxy (optional, Betreiber)"] -.->|"HTTPS → HTTP"| app
   subgraph compose["docker-compose.yml · Projekt pitstop"]
-    app["app ⏳<br/>Image pitstop-app:local<br/>Node 24 · Fastify · SPA<br/>pull_policy: build"]
-    db[("db ⏳<br/>postgres:18-alpine<br/>pull_policy: always")]
+    app["app ✅<br/>Image pitstop-app:local<br/>Node 24 · Fastify · SPA<br/>pull_policy: build"]
+    db[("db ✅<br/>postgres:18-alpine<br/>pull_policy: always")]
     app -->|"SQL (PG* env)"| db
   end
   app --- d1["./data → /app/data<br/>Backups, .initialized"]
@@ -49,34 +49,36 @@ flowchart LR
 ```mermaid
 flowchart TD
   subgraph client["src/client · React-SPA"]
-    cmain["main.tsx ⏳"] --> App["App.tsx ⏳<br/>Routen, Modal-Host, Toasts"]
-    App --> router["lib/router.ts ⏳"]
-    App --> layout["components/layout/* ⏳"]
-    App --> store["store/AppStore.tsx ⏳<br/>reducer.ts · mutations.ts"]
-    App --> mods["components/<br/>dashboard · crm · finance · hr · settings · auth · legal ⏳"]
-    mods --> ui["components/ui/* ⏳"]
+    cmain["main.tsx ✅"] --> App["App.tsx ✅<br/>Anmeldefluss, Shell, Routen"]
+    App --> router["lib/router.ts ✅"]
+    App --> modals["lib/modals.tsx ✅<br/>Modal-Host"]
+    App --> layout["components/layout/* ✅"]
+    App --> store["store/AppStore.tsx ✅<br/>reducer.ts · mutations.ts"]
+    App --> mods["components/<br/>dashboard · crm · finance · hr · settings · auth · legal ✅"]
+    mods --> ui["components/ui/* ✅"]
     mods --> store
-    store --> api["lib/api.ts ⏳"]
+    store --> api["lib/api.ts ✅"]
   end
 
   subgraph shared["src/shared · Client + Server"]
-    types["types.ts ⏳"]
-    perms["permissions.ts ⏳<br/>can(role, permission)"]
-    sel["selectors.ts ⏳"]
-    money["money.ts · dates.ts ⏳"]
-    labels["labels.ts · format.ts ⏳"]
+    types["types.ts ✅"]
+    perms["permissions.ts ✅<br/>can(role, permission)"]
+    sel["selectors.ts ✅"]
+    money["money.ts · dates.ts ✅"]
+    labels["labels.ts · format.ts ✅"]
   end
 
   subgraph server["src/server · Fastify"]
-    smain["main.ts ⏳"] --> config["config.ts ⏳"]
-    smain --> init["db/init.ts ⏳<br/>Migration, Admin, Demo, Marker"]
-    smain --> guards["auth/guards.ts ⏳"]
-    smain --> routes["routes/* ⏳"]
-    routes --> repo["repo/* ⏳ (SQL)"]
-    repo --> pool["db/pool.ts ⏳"]
-    init --> migrate["db/migrate.ts ⏳ → migrations/*.sql"]
-    init --> demo["demo/seed.ts ⏳"]
-    cli["cli.ts ⏳"] --> pool
+    smain["main.ts ✅"] --> config["config.ts ✅"]
+    smain --> app["app.ts ✅<br/>Fastify, Plugins, Fehlerformat"]
+    smain --> init["db/init.ts ✅<br/>Migration, Admin, Demo, Marker"]
+    app --> guards["auth/guards.ts ✅"]
+    app --> routes["routes/* ✅"]
+    routes --> repo["repo/* ✅ (SQL)"]
+    repo --> pool["db/pool.ts ✅"]
+    init --> migrate["db/migrate.ts ✅ → migrations/*.sql"]
+    init --> demo["demo/seed.ts ✅"]
+    cli["cli.ts ✅"] --> pool
   end
 
   api -->|"fetch /api/*"| routes
@@ -97,6 +99,8 @@ erDiagram
   User |o--o| Employee : "verknüpft"
   User ||--o{ Session : "hat"
   Customer ||--o{ ContactPerson : "hat"
+  Customer ||--o{ Vehicle : "besitzt"
+  Vehicle |o--o{ Invoice : "betrifft (km-Stand)"
   Customer ||--o{ Note : "Historie"
   Customer ||--o{ Invoice : "erhält"
   Invoice ||--|{ InvoiceItem : "Positionen"
@@ -114,18 +118,18 @@ Weitere Tabellen ohne Beziehungen: `expenses`, `tasks`, `settings` (Firmendaten)
 
 | Feature | Route (Client) | API | Einstieg Client | Weitere Komponenten | Selektoren | Rechte |
 |---|---|---|---|---|---|---|
-| Anmeldung | `#/login` | `auth/*` | `auth/LoginPage.tsx` ⏳ | `ChangePasswordModal`, `UserMenu` | – | – |
-| Rechtsseiten | `#/impressum`, `#/datenschutz` | `public/legal`, `public/logo` | `legal/ImpressumPage.tsx` ⏳ | `DatenschutzPage` | – | öffentlich |
-| Dashboard | `#/dashboard` | `bootstrap`, `tasks` | `dashboard/DashboardView.tsx` ⏳ | `KpiCard`, `RevenueExpenseChart`, `TaskList`, `AbsenceThisWeek` | `dashboardKpis`, `revenueVsExpensesLast6Months`, `derivedTasks` | `finance:view`, `task:manage` |
-| Kunden | `#/kunden[/:id]` | `customers`, `customers/:id/contacts`, `customers/:id/notes` | `crm/CustomerListView.tsx` ⏳ | `CustomerDrawer`, `ContactCards`, `NoteTimeline`, `NoteComposer`, `CustomerFormModal` | `customerOpenAmount`, `lastContactDate`, `invoiceTotals` | `customer:edit`, `customer:viewInvoices` |
-| Rechnungen | `#/finanzen/rechnungen[/:id]` | `invoices`, `invoices/:id/pay`, `invoices/:id/remind` | `finance/FinanceView.tsx` ⏳ | `InvoiceTable`, `InvoiceDrawer`, `InvoiceFormModal`, `LineItemsEditor` | `invoiceTotals`, `invoiceDisplayStatus`, `daysOverdue` | `finance:view` |
-| Ausgaben | `#/finanzen/ausgaben` | `expenses` | `finance/FinanceView.tsx` ⏳ | `ExpenseTable`, `ExpenseFormModal`, `ExpenseCategoryBreakdown` | `expenseTotals`, `expensesByCategory` | `finance:view` |
-| Personal | `#/personal[/:id]` | `employees`, `employees/:id/timesheets/:month` | `hr/HrView.tsx` ⏳ | `EmployeeDirectory`, `EmployeeCard`, `EmployeeDrawer`, `EmployeeFormModal`, `TimesheetModal`, `HoursChart`, `SickNoteModal` | `employeeStatusToday`, `vacationBalance`, `overtimeBalance` | `employee:edit`, `employee:viewRate`, `employee:viewFile:any`, `absence:reportSick` |
-| Urlaub | `#/personal/urlaub` | `absences`, `absences/:id/decide` | `hr/HrView.tsx` ⏳ | `LeaveTable`, `LeaveRequestModal` | `vacationBalance`, `workdaysBetween` | `absence:decide`, `absence:createForOthers` |
-| Einstellungen | `#/einstellungen/firma`, `…/benutzer` | `settings/company`, `users` | `settings/SettingsView.tsx` ⏳ | `CompanySettings`, `UserAccounts`, `UserFormModal` | – | `settings:manage`, `users:manage` |
-| Global | – | `bootstrap`, `demo/*` | `layout/TopBar.tsx` ⏳ | `CommandPalette`, `QuickCreateMenu`, `UserMenu`, `Sidebar` | `searchIndex` | je Treffer |
+| Anmeldung | `#/login` | `auth/*` | `auth/LoginPage.tsx` ✅ | `ChangePasswordModal`, `UserMenu` | – | – |
+| Rechtsseiten | `#/impressum`, `#/datenschutz` | `public/legal`, `public/logo` | `legal/ImpressumPage.tsx` ✅ | `DatenschutzPage` | – | öffentlich |
+| Dashboard | `#/dashboard` | `bootstrap`, `tasks` | `dashboard/DashboardView.tsx` ✅ | `KpiCard`, `RevenueExpenseChart`, `TaskList`, `AbsenceThisWeek` | `dashboardKpis`, `revenueVsExpenses`, `derivedTasks` | `finance:view`, `task:manage` |
+| Kunden & Fahrzeuge | `#/kunden[/:id]` | `customers`, `customers/:id/contacts`, `customers/:id/vehicles`, `vehicles/:id`, `customers/:id/notes` → `routes/customers.ts` | `crm/CustomerListView.tsx` ✅ | `CustomerDrawer`, `VehicleCards`, `VehicleFormModal`, `ContactCards`, `NoteTimeline`, `NoteComposer`, `CustomerFormModal` | `customerOpenAmount`, `lastContactDate`, `invoiceTotals` | `customer:edit`, `customer:viewInvoices` |
+| Rechnungen | `#/finanzen/rechnungen[/:id]` | `invoices`, `invoices/:id/pay`, `invoices/:id/remind` → `routes/finance.ts` | `finance/FinanceView.tsx` ✅ | `InvoiceTable`, `InvoiceDrawer`, `InvoiceFormModal`, `LineItemsEditor` | `invoiceTotals`, `invoiceDisplayStatus`, `daysOverdue` | `finance:view` |
+| Ausgaben | `#/finanzen/ausgaben` | `expenses` → `routes/finance.ts` | `finance/FinanceView.tsx` ✅ | `ExpenseTable`, `ExpenseFormModal`, `ExpenseCategoryBreakdown` | `expensesByCategory` | `finance:view` |
+| Personal | `#/personal[/:id]` | `employees`, `employees/:id/timesheets/:month` → `routes/people.ts` | `hr/HrView.tsx` ✅ | `EmployeeDirectory`, `EmployeeDrawer`, `EmployeeFormModal`, `TimesheetModal`, `HoursChart`, `SickNoteModal` | `employeeStatusToday`, `vacationBalance`, `overtimeBalance` | `employee:edit`, `employee:viewRate`, `employee:viewFile:any`, `absence:reportSick` |
+| Urlaub | `#/personal/urlaub` | `absences`, `absences/:id/decide` → `routes/people.ts` | `hr/HrView.tsx` ✅ | `LeaveTable`, `LeaveRequestModal` | `vacationBalance`, `workdaysBetween` | `absence:decide`, `absence:createForOthers` |
+| Einstellungen | `#/einstellungen/firma`, `…/benutzer` | `settings/company`, `users` → `routes/admin.ts` | `settings/SettingsView.tsx` ✅ | `CompanySettings`, `UserAccounts`, `UserFormModal` | – | `settings:manage`, `users:manage` |
+| Global | – | `bootstrap`, `demo/*` | `layout/TopBar.tsx` ✅ (enthält „+ Neu“ und Benutzermenü) | `CommandPalette`, `Sidebar`, `ModalHost` | `search` | je Treffer |
 
-Server-Seite je Feature: `src/server/routes/<api-bereich>.ts` ⏳ + `src/server/repo/<api-bereich>.ts` ⏳.
+Server-Seite: Routen gebündelt in `routes/customers.ts`, `finance.ts` (Rechnungen, Ausgaben), `people.ts` (Mitarbeiter, Abwesenheiten, Aufgaben), `admin.ts` (Firmendaten, Benutzer), dazu `auth.ts`, `bootstrap.ts`, `public.ts`, `demo.ts`. SQL je Tabelle in `repo/<name>.ts`. Aufgaben (`tasks`) liegen bei Dashboard: `routes/people.ts`.
 
 ## 5. Ablauf-Graphen (wer löst was aus)
 
@@ -136,7 +140,7 @@ Server-Seite je Feature: `src/server/routes/<api-bereich>.ts` ⏳ + `src/server/
 `LoginPage` → `POST /api/auth/login` → `auth/password.ts` (scrypt) → `auth/sessions.ts` (Token, Cookie) → Client lädt `GET /api/bootstrap` → `AppStore`. Bei `mustChangePassword` nur `ChangePasswordModal`.
 
 **Rechnung erstellen**
-`CustomerDrawer „Rechnung erstellen“` | `QuickCreateMenu` | `CommandPalette` → `useModals().open('invoice', {customerId})` → `InvoiceFormModal` (`LineItemsEditor` → `shared/money.ts`) → `mutations.createInvoice` → `POST /api/invoices` → `guards` (`finance:view`) → `repo/invoices.ts` (Sequenz für die Nummer) → Antwort → `entity/upsert` → `dashboardKpis`, `revenueVsExpensesLast6Months`, `customerOpenAmount` → Dashboard, `CustomerDrawer`, `InvoiceTable`.
+`CustomerDrawer „Rechnung erstellen“` | `QuickCreateMenu` | `CommandPalette` → `useModals().open('invoice', {customerId})` → `InvoiceFormModal` (`LineItemsEditor` → `shared/money.ts`) → `mutations.createInvoice` → `POST /api/invoices` → `guards` (`finance:view`) → `repo/invoices.ts` (Sequenz für die Nummer) → Antwort → `upsert` → `dashboardKpis`, `revenueVsExpenses`, `customerOpenAmount` → Dashboard, `CustomerDrawer`, `InvoiceTable`.
 
 **Urlaub genehmigen oder ablehnen**
 `TaskList` | `LeaveTable` → (Ablehnen: `ConfirmDialog` mit Begründung) → `POST /api/absences/:id/decide` (`absence:decide`) → `upsert` → `employeeStatusToday`, `vacationBalance`, `derivedTasks` → Dashboard, Verzeichnis, Personalakte; beim Antragsteller erscheint „Dein Antrag wurde …“ (nach dem nächsten Bootstrap).
@@ -155,10 +159,11 @@ Server-Seite je Feature: `src/server/routes/<api-bereich>.ts` ⏳ + `src/server/
 | Ändern, was als überfällig gilt, wie KPIs oder Aufgaben entstehen | `src/shared/selectors.ts` |
 | Festlegen, wer was darf | `src/shared/permissions.ts` (fachlich: CONCEPT.md Abschnitt 3); Feldfilter in `src/server/repo/*` (Serialisierer) |
 | Deutsche Bezeichnungen und Badge-Farben | `src/shared/labels.ts` |
-| Eine neue API-Route | `src/server/routes/<bereich>.ts` + `repo/<bereich>.ts`, registrieren in `main.ts`, Client-Aufruf in `client/store/mutations.ts` |
+| Eine neue API-Route | passende Datei in `src/server/routes/` + SQL in `repo/`, registrieren in `app.ts`, Client-Aufruf in `client/store/mutations.ts` |
 | Die Datenbank ändern | neue Datei `src/server/db/migrations/NNN_*.sql` (nie eine alte ändern) |
 | Was beim ersten Start passiert | `src/server/db/init.ts` |
-| Demo-Daten, feste Demo-Figuren, Positionsvorlagen | `src/server/demo/seed.ts`, `templates.ts` |
+| Demo-Daten, feste Demo-Figuren, Fahrzeuge, Laufkunden, Auftragsarten | `src/server/demo/templates.ts`, Erzeugung in `seed.ts` |
+| Positionsvorlagen im Rechnungsformular | `src/shared/catalog.ts` |
 | Login, Sitzungsdauer, Cookie | `src/server/auth/sessions.ts` |
 | Umgebungsvariablen | `src/server/config.ts` + `.env-example` + README-Tabelle |
 | Impressum-Felder | `.impressum-example`, `config.ts`, `client/components/legal/ImpressumPage.tsx` |
@@ -167,6 +172,9 @@ Server-Seite je Feature: `src/server/routes/<api-bereich>.ts` ⏳ + `src/server/
 | Farben und Schrift | `src/client/index.css` (`@theme`) |
 | Container, Ports, Volumes, Postgres-Version | `docker-compose.yml`, `Dockerfile`, `docker/entrypoint.sh` |
 | Passwort-Reset per Kommandozeile | `src/server/cli.ts`, Wrapper `docker/pitstop` |
+| Validierungsmeldungen, Fehlerformat der API | `src/server/errors.ts`, Fehler-Handler in `src/server/app.ts` |
+| Diagrammfarben (geprüft) | `SERIES_COLORS` in `src/client/components/dashboard/RevenueExpenseChart.tsx`, Kategorien in `shared/labels.ts` |
+| Browser-Tests der Drehbücher | `tests/e2e/demo.mjs`, `echtbetrieb.mjs`, Start mit `tests/e2e/run.sh` |
 
 ## 7. Glossar: Oberfläche ↔ Code
 
@@ -178,17 +186,19 @@ Server-Seite je Feature: `src/server/routes/<api-bereich>.ts` ⏳ + `src/server/
 | Demo-Modus | `DEMO_MODE`, `server/demo/*`, `AppData.demoMode` |
 | Kunde · Kundennummer | `Customer` · `Customer.number` (Anzeige `KD-10001`) |
 | Aktiv · Lead · Inaktiv | `CustomerStatus`: `active` · `lead` · `inactive` |
-| Privat · Gewerbe · Hausverwaltung · Öffentliche Hand | `CustomerKind`: `private` · `business` · `property_mgmt` · `public` |
+| Privat · Gewerbe · Fuhrpark · Öffentliche Hand | `CustomerKind`: `private` · `business` · `fleet` · `public` |
+| Fahrzeug · Kennzeichen · km-Stand · nächste HU | `Vehicle` · `plate` · `mileage` · `nextInspection` (Kennzeichen-Suche: `normalizePlate`) |
+| Benzin · Diesel · Elektro · Hybrid · Autogas | `FuelType`: `petrol` · `diesel` · `electric` · `hybrid` · `lpg` |
 | Ansprechpartner (Hauptkontakt) | `ContactPerson` (`isPrimary`) |
 | Historie: Notiz · Anruf · E-Mail · Termin · System | `Note.kind`: `note` · `call` · `email` · `meeting` · `system` |
 | Rechnung #1042 · Position | `Invoice.number = 1042` · `InvoiceItem` |
 | Offen · Bezahlt · Überfällig | `InvoiceStatus`: `open` · `paid` · *(berechnet)* `overdue` |
 | Mahnstufe M1–M3 | `Invoice.dunningLevel`, `Invoice.lastRemindedAt` |
-| Std. · Stk. · m · pauschal | `Unit`: `hours` · `piece` · `meter` · `flat` |
+| Std. · Stk. · l · m · pauschal | `Unit`: `hours` · `piece` · `liter` · `meter` · `flat` |
 | Ausgabe · Lieferant · Kategorie | `Expense` · `supplier` · `ExpenseCategory` |
 | Mitarbeiter(in) · Personalnummer | `Employee` · `personnelNumber` (`P-007`) |
 | Rolle / Position im Betrieb | `Employee.jobTitle` (**nicht** `role`) |
-| Abteilung | `Department`: `management` · `office` · `service` · `installation` · `planning` · `warehouse` |
+| Abteilung: Geschäftsführung · Büro & Verwaltung · Serviceannahme · Werkstatt · Tuning & Performance · Teile & Lager | `Department`: `management` · `office` · `service` · `workshop` · `tuning` · `parts` |
 | Im Dienst · Urlaub · Krank | *(berechnet)* `EmployeeStatus`: `on_duty` · `vacation` · `sick` |
 | Urlaubsantrag · Krankmeldung | `Absence.kind`: `vacation` · `sick` |
 | Beantragt · Genehmigt · Abgelehnt | `AbsenceStatus`: `requested` · `approved` · `rejected` |
@@ -200,6 +210,6 @@ Server-Seite je Feature: `src/server/routes/<api-bereich>.ts` ⏳ + `src/server/
 ## 8. Pflege dieser Datei
 
 - Neue Datei, Komponente, Route, Tabelle, Selektor oder neues Recht → in den passenden Graphen bzw. in Abschnitt 4 eintragen.
-- ⏳ → ✅, sobald die Datei existiert und `typecheck` grün ist.
+- ✅ → ✅, sobald die Datei existiert und `typecheck` grün ist.
 - Umbenennungen sofort nachziehen; ein veralteter Graph ist schlimmer als keiner.
 - Diese Datei bleibt eine Karte: keine Implementierungsdetails (die gehören in TECHNICAL.md), keine Protokolle (AGENTS.md).
