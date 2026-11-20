@@ -1,88 +1,64 @@
-import { diffDays, parseDate } from './dates';
+// Anzeigeformate (deutsch, Spielwährung $ ohne Steuern).
 
-const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
-const euroRounded = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
-const number = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 });
-const dateFmt = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-const dateShortFmt = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit' });
-const monthShortFmt = new Intl.DateTimeFormat('de-DE', { month: 'short' });
-const monthLongFmt = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' });
-const dateTimeFmt = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const usd = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
-export function formatEuro(cents: number): string {
-  return euro.format(cents / 100);
+export function formatUsd(cents: number): string {
+  const sign = cents < 0 ? '−' : '';
+  return `${sign}$${usd.format(Math.abs(cents) / 100)}`;
 }
 
-export function formatEuroRounded(cents: number): string {
-  return euroRounded.format(cents / 100);
+/** „1.250“, „1.250,50“, „$900“ → Cent; null bei ungültiger Eingabe. */
+export function parseUsd(input: string): number | null {
+  const s = input.replace(/[$\s]/g, '').replace(/\./g, '').replace(',', '.');
+  if (!/^-?\d+(\.\d{1,2})?$/.test(s)) return null;
+  return Math.round(Number(s) * 100);
 }
 
-export function formatNumber(n: number): string {
-  return number.format(n);
-}
-
-export function formatHours(n: number): string {
-  return `${number.format(n)} Std.`;
-}
-
-export function formatSignedHours(n: number): string {
-  const sign = n > 0 ? '+' : n < 0 ? '−' : '±';
-  return `${sign}${number.format(Math.abs(n))} Std.`;
-}
-
-export function formatDays(n: number): string {
-  return `${number.format(n)} ${n === 1 ? 'Tag' : 'Tage'}`;
+export function centsToInput(cents: number): string {
+  return (cents / 100).toLocaleString('de-DE', { useGrouping: false, maximumFractionDigits: 2 });
 }
 
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '–';
-  return dateFmt.format(parseDate(iso));
-}
-
-export function formatDateShort(iso: string): string {
-  return dateShortFmt.format(parseDate(iso));
+  const [y, m, d] = iso.slice(0, 10).split('-');
+  return `${d}.${m}.${y}`;
 }
 
 export function formatDateTime(isoTimestamp: string): string {
-  return dateTimeFmt.format(new Date(isoTimestamp));
+  return new Date(isoTimestamp).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-export function formatRange(from: string, to: string): string {
-  if (from === to) return formatDate(from);
-  if (from.slice(0, 4) === to.slice(0, 4)) return `${formatDateShort(from)}–${formatDate(to)}`;
-  return `${formatDate(from)}–${formatDate(to)}`;
+export function formatTime(isoTimestamp: string): string {
+  return new Date(isoTimestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 }
 
-export function formatMonthShort(month: string): string {
-  return monthShortFmt.format(parseDate(`${month}-01`)).replace('.', '');
+/** Dauer in Minuten als „2:05 h“. */
+export function formatMinutes(min: number): string {
+  const m = Math.max(0, Math.round(min));
+  return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')} h`;
 }
 
-export function formatMonthLong(month: string): string {
-  return monthLongFmt.format(parseDate(`${month}-01`));
-}
-
-/** „heute“, „gestern“, „vor 3 Tagen“, „in 5 Tagen“, ab 60 Tagen das Datum. */
-export function formatRelative(iso: string, todayIso: string): string {
-  const d = diffDays(todayIso, iso.slice(0, 10));
-  if (d === 0) return 'heute';
-  if (d === -1) return 'gestern';
-  if (d === 1) return 'morgen';
-  if (Math.abs(d) >= 60) return formatDate(iso.slice(0, 10));
-  return d < 0 ? `vor ${-d} Tagen` : `in ${d} Tagen`;
-}
-
-export function formatPercent(n: number): string {
-  const sign = n > 0 ? '+' : '';
-  return `${sign}${number.format(n)} %`;
+export function formatAgo(isoTimestamp: string, now = Date.now()): string {
+  const min = Math.round((now - new Date(isoTimestamp).getTime()) / 60000);
+  if (min < 1) return 'gerade eben';
+  if (min < 60) return `vor ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `vor ${h} h`;
+  const d = Math.round(h / 24);
+  return d === 1 ? 'gestern' : `vor ${d} Tagen`;
 }
 
 export function initials(name: string): string {
-  const parts = name.replace(/[^\p{L}\s-]/gu, ' ').split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 }
 
-export function customerNumberLabel(n: number): string {
-  return `KD-${n}`;
-}
+export const orderLabel = (n: number) => `W-${n}`;
+export const calloutLabel = (n: number) => `E-${n}`;
+export const billLabel = (n: number) => `R-${n}`;
+export const customerLabel = (n: number) => `K-${n}`;

@@ -1,11 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
 
 // Client liegt unter src/client, Build landet in dist/client (wird vom Server ausgeliefert).
 export default defineConfig({
   root: 'src/client',
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   build: {
     outDir: '../../dist/client',
     emptyOutDir: true,

@@ -19,3 +19,4 @@ node_modules/
 
 # Ergebnisse der Browser-Tests
 tests/e2e/shots/
+graphify-out/

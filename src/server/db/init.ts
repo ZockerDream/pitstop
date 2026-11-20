@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Logger } from 'pino';
-import { today } from '../../shared/dates';
 import { hashPassword, MIN_PASSWORD_LENGTH } from '../auth/password';
 import type { Config } from '../config';
 import { seedDemo } from '../demo/seed';
@@ -50,8 +49,7 @@ export async function createAdminFromEnv(client: PoolClient, cfg: Config): Promi
   await insertUser(client, {
     email: cfg.adminEmail,
     displayName: 'Administrator',
-    role: 'admin',
-    employeeId: null,
+    isServerAdmin: true,
     passwordHash: await hashPassword(cfg.adminPassword),
     mustChangePassword: true,
   });
@@ -73,7 +71,7 @@ export async function initialize(cfg: Config, log: Logger): Promise<void> {
     await tx(async (client) => {
       if (cfg.demoMode) {
         log.info('Demo-Modus: spiele Demo-Daten ein …');
-        await seedDemo(client, today());
+        await seedDemo(client);
       }
       await createAdminFromEnv(client, cfg);
     });

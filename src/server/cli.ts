@@ -5,11 +5,11 @@ import { ConfigError, loadConfig } from './config';
 import { closePool, db, initPool } from './db/pool';
 import { getUserWithHashByEmail, setPassword, updateUser } from './repo/users';
 
-const USAGE = 'Verwendung: pitstop reset-password <email>';
+const USAGE = 'Verwendung: pitstop reset-password <email> | pitstop disable-2fa <email>';
 
 async function main(): Promise<number> {
   const [command, email] = process.argv.slice(2);
-  if (command !== 'reset-password' || !email) {
+  if (!['reset-password', 'disable-2fa'].includes(command) || !email) {
     console.error(USAGE);
     return 2;
   }
@@ -24,6 +24,12 @@ async function main(): Promise<number> {
     if (!user) {
       console.error(`Kein Benutzer mit der E-Mail-Adresse ${email}.`);
       return 1;
+    }
+    if (command === 'disable-2fa') {
+      await db().query('UPDATE users SET totp_enabled = false, totp_secret = NULL WHERE id = $1', [user.id]);
+      await deleteUserSessions(user.id);
+      console.log(`Zwei-Faktor-Anmeldung für ${user.email} ausgeschaltet; alle Sitzungen sind abgemeldet.`);
+      return 0;
     }
     const password = generatePassword();
     await setPassword(db(), user.id, await hashPassword(password), true);

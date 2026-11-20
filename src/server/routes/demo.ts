@@ -1,41 +1,45 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { today } from '../../shared/dates';
 import { requireUser } from '../auth/guards';
 import { clearSessionCookie, createSession, deleteSessionByHash, setSessionCookie } from '../auth/sessions';
 import { createAdminFromEnv } from '../db/init';
 import { db, tx } from '../db/pool';
-import { seedDemo, wipeAll } from '../demo/seed';
+import { DEMO_PERSONAS, seedDemo, wipeAll } from '../demo/seed';
 import { notFound, parseBody } from '../errors';
-import { getDemoUserId, getUser, touchLogin } from '../repo/users';
+import { touchLogin } from '../repo/users';
 import type { RouteOptions } from './util';
 
-const loginSchema = z.object({ persona: z.enum(['admin', 'employee']) });
+const loginSchema = z.object({ persona: z.enum(DEMO_PERSONAS.map((p) => p.key) as [string, ...string[]]) });
 
 /** Nur im Demo-Modus; sonst antworten die Endpunkte mit 404. */
 export async function demoRoutes(app: FastifyInstance, { cfg }: RouteOptions): Promise<void> {
+  app.get('/demo/personas', async () => {
+    if (!cfg.demoMode) throw notFound();
+    return { personas: DEMO_PERSONAS.map((p) => ({ key: p.key, name: p.name, rank: p.rank })) };
+  });
+
   app.post('/demo/login', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (req, reply) => {
     if (!cfg.demoMode) throw notFound();
     const { persona } = parseBody(loginSchema, req.body);
-    const userId = await getDemoUserId(db(), persona);
-    if (!userId) throw notFound('Demo-Benutzer nicht gefunden. Bitte die Demo-Daten zurücksetzen.');
+    const email = DEMO_PERSONAS.find((p) => p.key === persona)!.email;
+    const { rows } = await db().query<{ id: string }>('SELECT id FROM users WHERE email = $1 AND is_demo AND active', [email]);
+    if (!rows[0]) throw notFound('Demo-Person nicht gefunden. Bitte Demo zurücksetzen.');
     if (req.sessionTokenHash) await deleteSessionByHash(req.sessionTokenHash);
-    const token = await createSession(userId, false);
-    await touchLogin(db(), userId);
+    const token = await createSession(rows[0].id, false);
+    await touchLogin(db(), rows[0].id);
     setSessionCookie(reply, token, false, cfg.secureCookies);
-    return { user: await getUser(db(), userId) };
+    return { ok: true };
   });
 
   app.post('/demo/reset', { config: { rateLimit: { max: 5, timeWindow: '1 minute' } } }, async (req, reply) => {
     if (!cfg.demoMode) throw notFound();
     requireUser(req);
-    await tx(async (c) => {
-      await wipeAll(c);
-      await seedDemo(c, today());
-      if (cfg.adminEmail && cfg.adminPassword) await createAdminFromEnv(c, cfg);
+    await tx(async (q) => {
+      await wipeAll(q);
+      await seedDemo(q);
+      await createAdminFromEnv(q, cfg);
     });
-    req.log.info('Demo-Daten zurückgesetzt');
     clearSessionCookie(reply);
-    return reply.code(204).send();
+    return { ok: true };
   });
 }

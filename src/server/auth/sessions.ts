@@ -13,15 +13,16 @@ export function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
-export async function createSession(userId: string, remember: boolean): Promise<string> {
+export async function createSession(userId: string, remember: boolean, userAgent = ''): Promise<string> {
   const token = randomBytes(32).toString('base64url');
   const expires = new Date(Date.now() + (remember ? REMEMBER_MS : IDLE_MS));
   await db().query('DELETE FROM sessions WHERE expires_at < now()');
-  await db().query('INSERT INTO sessions (token_hash, user_id, remember, expires_at) VALUES ($1, $2, $3, $4)', [
+  await db().query('INSERT INTO sessions (token_hash, user_id, remember, expires_at, user_agent) VALUES ($1, $2, $3, $4, $5)', [
     hashToken(token),
     userId,
     remember,
     expires,
+    userAgent.slice(0, 300),
   ]);
   return token;
 }

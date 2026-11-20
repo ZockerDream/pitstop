@@ -1,6 +1,6 @@
-# Pitstop – Business OS
+# Pitstop
 
-Pitstop ist ein selbst gehostetes All-in-One-ERP/CRM für **Kfz-Werkstätten mit Tuning**. Kundenakten mit Fahrzeugen, Rechnungen, Ausgaben, Mitarbeitende und Urlaubsanträge liegen in **einer** Oberfläche. Es läuft mit Docker Compose und speichert alles in PostgreSQL.
+Pitstop ist die selbst gehostete Verwaltung für Werkstätten auf einem **Roleplay-Server** (GTA V / FiveM): Werkstatt mit Lager, Abschleppdienst, Tuning, Racing, Kunden, Personal mit Dienstplan und Lohn, Schulungen und Finanzen in **einer** Oberfläche für PC, Tablet und Handy. Mehrere Firmen teilen sich einen Server; jede Firma vergibt ihre Rechte selbst. Geld ist Spielwährung ($, ohne Steuern). Es läuft mit Docker Compose und speichert alles in PostgreSQL.
 
 ## Inhalt
 
@@ -18,15 +18,22 @@ Pitstop ist ein selbst gehostetes All-in-One-ERP/CRM für **Kfz-Werkstätten mit
 
 ## Funktionen
 
-| Modul | Inhalt |
+| Bereich | Inhalt |
 |---|---|
-| **Dashboard** | Offene Rechnungen, Monatsumsatz, aktive Kunden, Anwesenheit heute; Umsatz und Ausgaben der letzten 6 Monate; Aufgaben & Freigaben (Urlaub genehmigen, überfällige Rechnungen mahnen, fällige HU anbieten) |
-| **Kunden (CRM)** | Kundenliste mit Suche (auch nach Kennzeichen) und Filter (Aktiv, Lead, Inaktiv); Kundenakte mit Stammdaten, **Fahrzeugen** (Kennzeichen, FIN, km-Stand, HU-Termin, Umbauten), Ansprechpartnern, Kommunikationshistorie und allen Rechnungen |
-| **Finanzen (ERP)** | Rechnungen mit Fahrzeug und km-Stand, Status (Offen, Überfällig, Bezahlt) und Mahnstufen; neue Rechnung mit Werkstatt-Positionsvorlagen und automatischer Berechnung von Netto, 19 % MwSt. und Brutto; Ausgaben nach Kategorien |
-| **Personal (HR)** | Mitarbeiterverzeichnis mit Status (Im Dienst, Urlaub, Krank); digitale Personalakte mit Vertrag, Resturlaub und Stunden; Urlaubsanträge stellen, genehmigen und ablehnen |
-| **Einstellungen** | Firmendaten für den Rechnungskopf, Benutzerkonten für Mitarbeitende |
+| **Übersicht** | Cockpit und weitere benannte Arbeitsflächen mit Widgets (pro Konto), Live-Feed, Kalender; Tabs mit „Seite daneben“; Suche mit Strg+K (auch Kennzeichen-Abgleich), Meldungen, „Neu“-Menü |
+| **Werkstatt** | Auftragstafel (Angenommen → In Arbeit → Wartet auf Teile → Fertig → Abgeholt) mit Kunde, Fahrzeug, Zuständigem, Preis und Fortschritt; daraus Rechnung stellen. Fahrzeugannahme mit Schadensskizze, Fotos und Checkliste, Hallenplan, Lager mit Bestellungen und Inventur, Werkzeugausgabe |
+| **Abschleppdienst** | Leitstelle mit Karte (Zoom per Mausrad, eigenes Kartenbild mit Zwei-Punkt-Kalibrierung), Einsätze mit Spielkoordinaten, Fahrer, Status; abrechnen; Einsatzliste mit Kennzahlen; Fuhrpark mit Fahrtenbuch |
+| **Tuning** | Konfigurator (Stufen je Teil, Fahrzeugklasse, Pakete, Kundenrabatt) → Tuning-Auftrag, Builds, Prüfstand, eigene Preisliste |
+| **Racing** | Rennkalender mit Startplätzen, Startgeld und Meisterschaft; Team & Rennwagen (Verschleiß, Budget), Setups & Telemetrie (Sektoren), Bestenliste, Kunden-Trackdays mit Paketen |
+| **Kunden** | Kundenakten, Fahrzeugakten (Tuningstand, Vorschäden, gestohlen gemeldet), Rahmenverträge, Nachrichten an Kunden mit Vorlagen |
+| **Personal** | Mitarbeiter mit Rang, Stempeluhr, Dienstzeiten, Dienstplan mit Abwesenheiten und Stempel-Nachträgen, Lohn & Provision (Stundenlohn, Provision, Fixum) mit Lohnlauf und Auszahlung, Ränge, Bewerbungen |
+| **Schulungen** | Kurse mit Lektionen und Test (auch Freitext), Prüfungen & Termine, Praxisprüfung, Pflichtkurse je Gruppe, Nachweise und Lizenzen mit Ablaufdatum |
+| **Finanzen** | Vier Konten (Firmenkonto, Kasse, Trinkgeld, Rennteam), Rechnungen und Angebote, Mahnen, Storno, Buchungen mit Betragsgrenzen, Kasse mit Tagesabschluss, Daueraufträgen und Trinkgeld-Verteilung, Ziele, Auswertung |
+| **Firma** | Firmendaten, Mitglieder aufnehmen, **Gruppen & Rechte** (Stufe je Bereich, „nur eigene“, Sonderrechte, Ausnahmen pro Person), Module an/aus, Protokoll, CSV-Export, Preisliste mit Nachweis-Pflicht, Regelwerk zum Bestätigen, Pinnwand mit Umfragen, Webhooks (Discord), Vorschau als Person |
+| **Serververwaltung** | Für Server-Admins (eigene Rolle pro Konto): Firmen, Benutzerkonten, Sicherungen mit Wiederherstellen (auch automatisch täglich), Export, Anbindungen mit API-Schlüsseln, Spielserver-Anbindung für FiveM (Dienst, Notrufe, Zahlungen, Rundenzeiten, Fahndung), Anmeldung mit Discord, Einstellungen (Wartungsmodus, Standard-Module), Server-Protokoll, Ankündigungen. Firmendaten nur mit Support-Freigabe der Firma |
+| **Persönlich** | Konto mit angemeldeten Geräten, Zwei-Faktor-Anmeldung, Discord-Verknüpfung, Darstellung pro Konto (6 Themes, Dichte, Schriftgröße, Startseite), Neuigkeiten für alle |
 
-Es gibt zwei Rollen: **Admin** (Geschäftsführung, sieht und darf alles) und **Mitarbeiter** (keine Finanzen, keine Stundensätze, nur die eigene Personalakte, eigene Urlaubsanträge). Die Anmeldung läuft über E-Mail und Passwort. Impressum und Datenschutzerklärung sind ohne Anmeldung erreichbar.
+Die Anmeldung läuft über E-Mail und Passwort. Der erste Admin aus der `.env` ist Server-Admin. Impressum und Datenschutzerklärung sind auf der Anmeldeseite erreichbar.
 
 ## Voraussetzungen
 
@@ -55,7 +62,7 @@ Danach `http://<server>:8080` öffnen (bzw. die Adresse aus `PUBLIC_URL`) und mi
 
 Ob alles läuft, zeigt `docker compose ps`: Beide Dienste (`app`, `db`) sollten `healthy` sein.
 
-**Mitarbeitende anlegen:** unter *Personal* den Mitarbeiter erfassen, dann unter *Einstellungen → Benutzer* einen Zugang mit Startpasswort anlegen. Auch hier ist beim ersten Anmelden ein neues Passwort fällig.
+**Firma und Leute anlegen:** Als Server-Admin unter *Serververwaltung → Benutzerkonten* Konten anlegen (Startpasswort wird einmal angezeigt) und unter *Firmen* eine Firma mit Inhaber anlegen. Der Inhaber nimmt danach unter *Firma → Mitglieder & Zugänge* weitere Leute auf und vergibt Gruppen. Beim ersten Anmelden ist ein eigenes Passwort fällig.
 
 ## Konfiguration
 
@@ -73,6 +80,7 @@ Ob alles läuft, zeigt `docker compose ps`: Beide Dienste (`app`, `db`) sollten 
 | `POSTGRES_USER` | nein | `pitstop` | Datenbank-Benutzer |
 | `POSTGRES_DB` | nein | `pitstop` | Datenbank-Name |
 | `LOG_LEVEL` | nein | `info` | `debug`, `info`, `warn` oder `error` |
+| `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` | nein | – | Anmeldung mit Discord, siehe [Discord-Anmeldung](#discord-anmeldung). Leer = aus |
 
 > **Datenbank-Passwort später ändern:** Postgres übernimmt `POSTGRES_PASSWORD` nur beim Anlegen der Datenbank. Wer es später ändern will, ändert es zuerst in der Datenbank und dann in der `.env`:
 > 1. `docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`
@@ -109,9 +117,25 @@ Werte mit Sonderzeichen (`#`, `"`, `$`) in einfache Anführungszeichen setzen. N
 
 ### Demo-Modus
 
-Mit `DEMO_MODE=true` spielt Pitstop beim **ersten Start** Beispieldaten einer erfundenen Kfz-Werkstatt mit Tuning ein: 18 Mitarbeitende, rund 180 Kunden mit 210 Fahrzeugen, 6 Monate Rechnungen und Ausgaben, Urlaubsanträge. Die Anmeldeseite bietet dann „Als Admin ansehen“ und „Als Mitarbeiter ansehen“, das Benutzermenü einen Rollenwechsel und „Demo-Daten zurücksetzen“.
+Mit `DEMO_MODE=true` legt Pitstop beim **ersten Start** die Firma „Demo Motorsport“ mit Kunden, Fahrzeugen, Aufträgen, Einsätzen, Rechnungen, Schichten, Lager, Dienstplan, Löhnen, Kursen, Prüfstandsmessungen, Rennen und allen Bereichen ab 0.4 (Hallenplan, Werkzeug, Fuhrpark, Rennteam, Verträge, Nachrichten, Ränge, Bewerbungen, Kasse, Preisliste, Regelwerk, Pinnwand) an. Die Anmeldeseite bietet dann die Anmeldung mit einem Klick als Inhaber, Leitung, Mechanik, Abschleppfahrerin oder Büro; unter *Mein Konto* gibt es „Demo-Daten zurücksetzen“. Der Admin aus der `.env` ist Server-Admin und nicht Mitglied der Demo-Firma.
 
 **Nicht für echte Daten verwenden.** Im Demo-Modus kann jeder, der die Seite erreicht, sich mit einem Klick als Admin anmelden. Um von der Demo auf echten Betrieb zu wechseln: `DEMO_MODE=false` setzen und mit leerer Datenbank neu beginnen (siehe [Löschen](#löschen), Daten löschen, danach wieder `docker compose up -d`).
+
+### Discord-Anmeldung
+
+1. Unter https://discord.com/developers/applications eine Anwendung anlegen.
+2. Bei *OAuth2* als Redirect `<PUBLIC_URL>/api/auth/discord/callback` eintragen (z. B. `https://pitstop.example.de/api/auth/discord/callback`).
+3. Client-ID und Client-Secret in die `.env` (`DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`), dann `docker compose up -d`.
+
+Die Anmeldeseite zeigt danach „Mit Discord anmelden“. Discord legt **keine** Konten an: Jede Person meldet sich zuerst mit E-Mail an und verknüpft unter *Mein Konto → Discord* ihr Discord-Konto. Konten mit Zwei-Faktor-Anmeldung melden sich weiter mit E-Mail, Passwort und Code an.
+
+### Zwei-Faktor-Anmeldung
+
+Jede Person kann unter *Mein Konto → Zwei-Faktor-Anmeldung* eine Authenticator-App (Google Authenticator, Aegis, 1Password …) einrichten. Die Konten-Liste der Serververwaltung markiert Server-Admins ohne Zwei-Faktor. Handy verloren: `docker compose exec app pitstop disable-2fa person@example.de` schaltet es ab und meldet alle Sitzungen ab.
+
+### Spielserver (FiveM)
+
+Die Ressource liegt im Repository unter `fivem/pitstop` (Anleitung dort in der `README.md`). Kurz: In Pitstop unter *Firma → Firmendaten → Spielserver* einen Schlüssel erstellen, den Ordner in die `resources` des FiveM-Servers kopieren, `pitstop_url`, `pitstop_key` und `ensure pitstop` in die `server.cfg` und bei den Mitgliedern die Spiel-ID (z. B. `license:…`) eintragen. Danach gibt es `/dienst`, `/notruf`, `/kennzeichen` und Exports für Bank-, Renn- und Polizei-Skripte. Der Spielserver muss Pitstop über `PUBLIC_URL` erreichen.
 
 ### Zugriff über HTTPS
 
@@ -167,6 +191,17 @@ sudo rm -rf db/18
 Startet man versehentlich die App mit der neuen, leeren Datenbank, verweigert sie den Start mit einem Hinweis auf diesen Abschnitt, statt eine leere Firma anzulegen.
 
 ## Backup
+
+**In der App:** Serververwaltung → Sicherungen → „Jetzt sichern“ legt eine komplette Sicherung aller Firmen und Konten als `data/backups/pitstop-JJJJ-MM-TT-hhmmss.json.gz` an. Von dort lässt sie sich herunterladen und wiederherstellen (vorher sichert Pitstop den jetzigen Stand automatisch; alle werden abgemeldet). Kartenbilder unter `data/maps` und Fotos unter `data/photos` sind nicht enthalten – die Komplettsicherung des Ordners (unten) enthält alles. Außerdem sichert Pitstop **automatisch einmal am Tag** (Standard ab 4 Uhr Serverzeit, 14 Stück aufbewahren; einstellbar unter Serververwaltung → Einstellungen). Gelöscht werden dabei nur ältere automatische Sicherungen, nie von Hand erstellte.
+
+> **Update von 0.4 auf 0.5:** Die Migration 006 fügt nur Spalten und Tabellen hinzu (Zwei-Faktor, Discord-Verknüpfung, Spiel-ID, Fotos, Spielserver-Schlüssel). Für die Discord-Anmeldung `DISCORD_CLIENT_ID` und `DISCORD_CLIENT_SECRET` in die `.env` eintragen (optional). Fotos liegen in `data/photos`.
+
+> **Update von 0.3 auf 0.4:** Die Migration 005 fügt nur Tabellen und Spalten hinzu; vorhandene Daten bleiben. Gruppen mit den Vorlagen-Namen bekommen Stufen für die neuen Bereiche (Hallenplan, Werkzeug, Fuhrpark, Rahmenverträge, Nachrichten, Ränge, Bewerbungen, Preisliste, Regelwerk, Pinnwand); eigene Gruppen musst du unter *Gruppen & Rechte* freigeben. Neu ist eine **automatische Sicherung** täglich ab 4 Uhr (Serverzeit), die 14 automatische Sicherungen in `data/backups` behält; Uhrzeit, Anzahl oder Abschalten unter *Serververwaltung → Einstellungen*. Alle bisherigen Sitzungen bleiben gültig.
+
+> **Update von 0.2 auf 0.3:** Die Migration 004 fügt nur Tabellen und Spalten hinzu; vorhandene Daten bleiben. Bestehende Firmen bekommen die Module Tuning, Racing und Schulungen eingeschaltet (unter *Firma → Module* abschaltbar), und Gruppen mit den Vorlagen-Namen (Leitung, Mechanik, Abschleppdienst, Büro & Finanzen, Gäste) bekommen Stufen für die neuen Bereiche. Eigene Gruppen sehen die neuen Bereiche erst, wenn man sie unter *Gruppen & Rechte* freigibt.
+
+> **Update von 0.1 auf 0.2:** Die Migration 003 ersetzt die Fachdaten von 0.1 (Kunden, Rechnungen mit MwSt., Personal). Vorher einen Datenbank-Dump machen. Konten bleiben; bisherige Admins werden Server-Admins.
+
 
 ### Datenbank-Dump im laufenden Betrieb
 
@@ -260,6 +295,7 @@ Gelöschte Daten lassen sich nicht wiederherstellen. Vorher ein [Backup](#backup
 | Logdateien | `logs/app/`, `logs/postgres/` |
 | Neu starten | `docker compose restart app` |
 | Passwort eines Benutzers zurücksetzen (z. B. Admin ausgesperrt) | `docker compose exec app pitstop reset-password admin@example.de` – gibt ein neues Startpasswort aus |
+| Zwei-Faktor einer Person abschalten (Handy verloren) | `docker compose exec app pitstop disable-2fa admin@example.de` |
 | Installierte Version | `git log -1 --oneline` |
 
 Häufige Probleme:

@@ -2,7 +2,6 @@
 # Führt ein Drehbuch-Skript in echtem Chromium aus (Playwright-Container, keine lokale Installation nötig).
 #
 #   tests/e2e/run.sh demo.mjs [BASE-URL]          # Demo-Drehbuch, Standard http://localhost:8080
-#   tests/e2e/run.sh echtbetrieb.mjs BASE-URL     # Echtbetrieb, braucht einen frischen Stack (siehe Kopf der Datei)
 #
 # Screenshots landen in tests/e2e/shots/ (nicht in Git). Exit-Code 1, wenn ein Schritt fehlschlägt.
 set -e

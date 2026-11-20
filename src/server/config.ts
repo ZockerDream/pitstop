@@ -38,6 +38,9 @@ const schema = z.object({
   POSTGRES_USER: z.preprocess(emptyToUndefined, z.string().optional()),
   POSTGRES_PASSWORD: z.preprocess(emptyToUndefined, z.string().optional()),
   POSTGRES_DB: z.preprocess(emptyToUndefined, z.string().optional()),
+  DISCORD_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().regex(/^\d{5,30}$/, { message: 'muss die Zahlen-ID der Discord-Anwendung sein' }).optional()),
+  DISCORD_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().optional()),
+  DISCORD_API: z.preprocess(emptyToUndefined, z.url().default('https://discord.com/api')),
 });
 
 export interface Config {
@@ -55,6 +58,8 @@ export interface Config {
   confDir: string;
   db: { host: string; port: number; user: string; password: string; database: string };
   impressum: ImpressumData | null;
+  /** Anmeldung mit Discord, nur wenn Client-ID und Secret gesetzt sind. */
+  discord: { clientId: string; clientSecret: string; api: string } | null;
 }
 
 const IMPRESSUM_KEYS: Record<keyof ImpressumData, string> = {
@@ -115,5 +120,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       database: e.PGDATABASE ?? e.POSTGRES_DB ?? 'pitstop',
     },
     impressum: readImpressum(env),
+    discord: e.DISCORD_CLIENT_ID && e.DISCORD_CLIENT_SECRET ? { clientId: e.DISCORD_CLIENT_ID, clientSecret: e.DISCORD_CLIENT_SECRET, api: e.DISCORD_API.replace(/\/$/, '') } : null,
   };
 }

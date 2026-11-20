@@ -10,14 +10,18 @@ import type { Logger } from 'pino';
 import { registerAuth } from './auth/guards';
 import type { Config } from './config';
 import { HttpError } from './errors';
-import { adminRoutes } from './routes/admin';
 import { authRoutes } from './routes/auth';
-import { bootstrapRoutes } from './routes/bootstrap';
-import { customerRoutes } from './routes/customers';
+import { companyRoutes } from './routes/company';
 import { demoRoutes } from './routes/demo';
-import { financeRoutes } from './routes/finance';
-import { peopleRoutes } from './routes/people';
 import { publicRoutes } from './routes/public';
+import { serverRoutes } from './routes/server';
+import { moduleRoutes } from './routes/modules';
+import { moreRoutes } from './routes/more';
+import { platformRoutes } from './routes/platform';
+import { discordRoutes } from './routes/discord';
+import { gameRoutes } from './routes/game';
+import { photoRoutes } from './routes/photos';
+import { workRoutes } from './routes/work';
 
 // LogController ersetzt ab Fastify 5.x die Option disableRequestLogging, ist aber (noch) nicht typisiert.
 const require = createRequire(import.meta.url);
@@ -93,11 +97,15 @@ export async function buildApp(cfg: Config, log: Logger): Promise<FastifyInstanc
     async (api) => {
       await api.register(publicRoutes, opts);
       await api.register(authRoutes, opts);
-      await api.register(bootstrapRoutes, opts);
-      await api.register(customerRoutes, opts);
-      await api.register(financeRoutes, opts);
-      await api.register(peopleRoutes, opts);
-      await api.register(adminRoutes, opts);
+      await api.register(companyRoutes, opts);
+      await api.register(workRoutes, opts);
+      await api.register(moduleRoutes, opts);
+      await api.register(moreRoutes, opts);
+      await api.register(platformRoutes, opts);
+      await api.register(discordRoutes, opts);
+      await api.register(gameRoutes, opts);
+      await api.register(photoRoutes, opts);
+      await api.register(serverRoutes, opts);
       await api.register(demoRoutes, opts);
     },
     { prefix: '/api' },

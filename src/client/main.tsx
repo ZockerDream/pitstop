@@ -1,13 +1,12 @@
-import '@fontsource-variable/inter';
+import '@fontsource/chakra-petch/500.css';
+import '@fontsource/chakra-petch/600.css';
+import '@fontsource/chakra-petch/700.css';
+import '@fontsource-variable/manrope';
+import '@fontsource-variable/jetbrains-mono';
 import './index.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { setTodayOverride } from '../shared/dates';
 import { App } from './App';
-
-// Nur für Tests: ?heute=JJJJ-MM-TT legt „heute“ im Client fest.
-const heute = new URLSearchParams(window.location.search).get('heute');
-if (heute) setTodayOverride(heute);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

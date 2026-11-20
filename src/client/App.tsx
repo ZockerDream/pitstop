@@ -1,150 +1,204 @@
+// Anmeldefluss: ohne Sitzung → Anmeldung, Startpasswort → neues Passwort, sonst App.
 import { useCallback, useEffect, useState } from 'react';
-import type { User } from '../shared/types';
-import { ForcePasswordChange } from './components/auth/ForcePasswordChange';
-import { LoginPage } from './components/auth/LoginPage';
-import { CustomerListView } from './components/crm/CustomerListView';
-import { DashboardView } from './components/dashboard/DashboardView';
-import { FinanceView } from './components/finance/FinanceView';
-import { HrView } from './components/hr/HrView';
-import { CommandPalette } from './components/layout/CommandPalette';
-import { ModalHost } from './components/layout/ModalHost';
-import { NoAccess } from './components/layout/NoAccess';
-import { Sidebar } from './components/layout/Sidebar';
-import { Splash } from './components/layout/Splash';
-import { TopBar } from './components/layout/TopBar';
-import { LegalPage } from './components/legal/LegalPage';
-import { SettingsView } from './components/settings/SettingsView';
-import { ConfirmProvider, ToastProvider } from './components/ui/feedback';
-import { api, setAuthProblemHandler } from './lib/api';
-import { ModalProvider } from './lib/modals';
-import { navigate, useRoute, type Route } from './lib/router';
-import { AppStoreProvider, useCan } from './store/AppStore';
+import type { LegalInfo, MeData, User } from '../shared/types';
+import { api, ApiError, errorMessage, fieldErrors, setAuthProblemHandler } from './lib/api';
+import { AppProvider, applyPrefs } from './lib/app';
+import { Shell } from './components/Shell';
+import { Avatar } from './components/ui';
 
-type AuthState = { status: 'loading' } | { status: 'anon' } | { status: 'authed'; user: User };
+const DISCORD_MSG: Record<string, string> = {
+  abgebrochen: 'Anmeldung mit Discord abgebrochen.',
+  ungueltig: 'Die Anmeldung mit Discord ist abgelaufen. Bitte noch einmal versuchen.',
+  fehler: 'Discord hat nicht geantwortet. Bitte später noch einmal versuchen.',
+  unbekannt: 'Dieses Discord-Konto ist mit keinem Pitstop-Konto verknüpft. Erst mit E-Mail anmelden und unter „Mein Konto“ Discord verknüpfen.',
+  zweifaktor: 'Dein Konto nutzt Zwei-Faktor-Anmeldung. Bitte mit E-Mail, Passwort und Code anmelden.',
+  wartung: 'Pitstop wird gerade gewartet. Bitte später noch einmal versuchen.',
+};
 
-export interface SessionControls {
-  logout: () => Promise<void>;
-  switchPersona: (persona: 'admin' | 'employee') => Promise<void>;
-  resetDemo: () => Promise<void>;
-}
+type Stage = { k: 'loading' } | { k: 'login'; demoMode: boolean } | { k: 'password'; user: User } | { k: 'app'; me: MeData };
 
 export function App() {
-  const route = useRoute();
-  const [auth, setAuth] = useState<AuthState>({ status: 'loading' });
+  const [stage, setStage] = useState<Stage>({ k: 'loading' });
 
-  const checkSession = useCallback(async () => {
+  const start = useCallback(async () => {
     try {
-      const r = await api.get<{ user: User | null }>('/auth/me');
-      setAuth(r.user ? { status: 'authed', user: r.user } : { status: 'anon' });
+      const r = await api.get<{ user: User | null; demoMode: boolean }>('/auth/me');
+      if (!r.user) return setStage({ k: 'login', demoMode: r.demoMode });
+      applyPrefs(r.user.prefs);
+      if (r.user.mustChangePassword) return setStage({ k: 'password', user: r.user });
+      setStage({ k: 'app', me: await api.get<MeData>('/me') });
     } catch {
-      setAuth({ status: 'anon' });
+      setStage({ k: 'login', demoMode: false });
     }
   }, []);
 
   useEffect(() => {
-    void checkSession();
-    setAuthProblemHandler((err) => {
-      if (err.status === 401) setAuth({ status: 'anon' });
-      else void checkSession();
-    });
+    void start();
+    setAuthProblemHandler(() => void start());
     return () => setAuthProblemHandler(null);
-  }, [checkSession]);
+  }, [start]);
 
-  const controls: SessionControls = {
-    logout: async () => {
-      await api.post('/auth/logout').catch(() => undefined);
-      setAuth({ status: 'anon' });
-      navigate('/dashboard');
-    },
-    switchPersona: async (persona) => {
-      const r = await api.post<{ user: User }>('/demo/login', { persona });
-      setAuth({ status: 'authed', user: r.user });
-      navigate('/dashboard');
-    },
-    resetDemo: async () => {
-      await api.post('/demo/reset');
-      setAuth({ status: 'anon' });
-      navigate('/dashboard');
-    },
-  };
-
-  const section = route.segments[0];
-  if (section === 'impressum' || section === 'datenschutz') return <LegalPage kind={section} loggedIn={auth.status === 'authed'} />;
-  if (auth.status === 'loading') return <Splash />;
-  if (auth.status === 'anon') {
-    return <LoginPage onLoggedIn={(user) => setAuth({ status: 'authed', user })} />;
-  }
-  if (auth.user.mustChangePassword) {
-    return <ForcePasswordChange user={auth.user} onDone={(user) => setAuth({ status: 'authed', user })} onLogout={controls.logout} />;
-  }
+  if (stage.k === 'loading') return null;
+  if (stage.k === 'login') return <Login demoMode={stage.demoMode} onDone={start} />;
+  if (stage.k === 'password') return <ForcePassword user={stage.user} onDone={start} />;
   return (
-    <ToastProvider>
-      <ConfirmProvider>
-        <ModalProvider>
-          <AppStoreProvider key={auth.user.id} fallback={(error, retry) => <Splash error={error} onRetry={retry} />}>
-            <Shell route={route} controls={controls} />
-          </AppStoreProvider>
-        </ModalProvider>
-      </ConfirmProvider>
-    </ToastProvider>
+    <AppProvider initialMe={stage.me}>
+      <Shell />
+    </AppProvider>
   );
 }
 
-function Shell({ route, controls }: { route: Route; controls: SessionControls }) {
-  const can = useCan();
-  const [navOpen, setNavOpen] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [section, second, third] = route.segments;
+function Brand() {
+  return (
+    <div className="brand" style={{ padding: 0 }}>
+      <div className="mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 17h4l3-9 4 12 3-7h4" /></svg>
+      </div>
+      <div>
+        <b>Pitstop</b>
+        <span>Werkstatt-OS</span>
+      </div>
+    </div>
+  );
+}
+
+function Login({ demoMode, onDone }: { demoMode: boolean; onDone: () => void }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(false);
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [personas, setPersonas] = useState<{ key: string; name: string; rank: string }[]>([]);
+  const [legal, setLegal] = useState<LegalInfo | null>(null);
+  const [showLegal, setShowLegal] = useState<'impressum' | 'datenschutz' | null>(null);
+  const [code, setCode] = useState('');
+  const [needCode, setNeedCode] = useState(false);
+  // Rückmeldung der Discord-Anmeldung (?discord=…)
+  const [discordMsg] = useState(() => {
+    const k = new URLSearchParams(window.location.search).get('discord');
+    if (k) window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+    return k ? DISCORD_MSG[k] ?? 'Anmeldung mit Discord fehlgeschlagen.' : '';
+  });
 
   useEffect(() => {
-    if (section === 'login') navigate('/dashboard');
-    setNavOpen(false);
-  }, [section]);
+    if (demoMode) void api.get<{ personas: typeof personas }>('/demo/personas').then((r) => setPersonas(r.personas)).catch(() => undefined);
+    void api.get<LegalInfo>('/public/legal').then(setLegal).catch(() => undefined);
+  }, [demoMode]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setPaletteOpen((o) => !o);
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setErr('');
+    try {
+      await api.post('/auth/login', { email, password, remember, code: needCode ? code : undefined });
+      onDone();
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'TOTP_REQUIRED') {
+        setNeedCode(true);
+        setErr('');
+        return;
       }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
-  let content;
-  switch (section) {
-    case 'kunden':
-      content = <CustomerListView customerId={second} />;
-      break;
-    case 'finanzen':
-      content = can('finance:view') ? (
-        <FinanceView tab={second === 'ausgaben' ? 'expenses' : 'invoices'} invoiceId={second === 'rechnungen' ? third : undefined} query={route.query} />
-      ) : (
-        <NoAccess />
-      );
-      break;
-    case 'personal':
-      content = <HrView tab={second === 'urlaub' ? 'leave' : 'directory'} employeeId={second && second !== 'urlaub' ? second : undefined} />;
-      break;
-    case 'einstellungen':
-      content = can('settings:manage') ? <SettingsView tab={second === 'benutzer' ? 'users' : 'company'} /> : <NoAccess />;
-      break;
-    default:
-      content = <DashboardView />;
+      setErr(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <div className="flex h-full">
-      <Sidebar open={navOpen} onClose={() => setNavOpen(false)} section={section} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar route={route} controls={controls} onOpenNav={() => setNavOpen(true)} onOpenSearch={() => setPaletteOpen(true)} />
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-8">{content}</div>
-        </main>
+    <div className="login">
+      <div className="card">
+        <Brand />
+        <h1>Anmelden</h1>
+        <p className="muted small" style={{ marginTop: 0 }}>Werkstatt, Abschleppdienst, Kunden, Personal und Finanzen an einem Ort.</p>
+        <form className="stack" onSubmit={submit}>
+          <div className="field">
+            <label htmlFor="l-mail">E-Mail-Adresse</label>
+            <input id="l-mail" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
+          </div>
+          <div className="field">
+            <label htmlFor="l-pw">Passwort</label>
+            <input id="l-pw" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+          {needCode && (
+            <div className="field">
+              <label htmlFor="l-code">Code aus der Authenticator-App</label>
+              <input id="l-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} autoFocus />
+            </div>
+          )}
+          <label className="row small" style={{ gap: 8 }}>
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Angemeldet bleiben (30 Tage)
+          </label>
+          {(err || discordMsg) && <div className="err" role="alert">{err || discordMsg}</div>}
+          <button className="btn pri" disabled={busy || (needCode && code.length !== 6)} type="submit" style={{ justifyContent: 'center' }}>Anmelden</button>
+        </form>
+        {legal?.discordLogin && (
+          <a className="btn" style={{ justifyContent: 'center', marginTop: 10, width: '100%' }} href={`/api/auth/discord/start?mode=login${remember ? '&remember=1' : ''}`}>Mit Discord anmelden</a>
+        )}
+        {personas.length > 0 && (
+          <div style={{ marginTop: 18 }}>
+            <div className="st">Demo: als … anmelden</div>
+            {personas.map((p) => (
+              <button key={p.key} className="li" style={{ width: '100%', background: 'none', border: 0, borderBottom: '1px solid var(--line)', textAlign: 'left' }} onClick={async () => { await api.post('/demo/login', { persona: p.key }); onDone(); }}>
+                <Avatar name={p.name} />
+                <span className="tx"><b>{p.name}</b><span>{p.rank}</span></span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="row small muted" style={{ marginTop: 16, gap: 14 }}>
+          <button className="link" onClick={() => setShowLegal('impressum')}>Impressum</button>
+          <button className="link" onClick={() => setShowLegal('datenschutz')}>Datenschutz</button>
+        </div>
+        {showLegal && legal && (
+          <div className="card flat" style={{ marginTop: 12, whiteSpace: 'pre-wrap', fontSize: 13 }}>
+            {showLegal === 'impressum'
+              ? legal.impressum
+                ? [legal.impressum.name, legal.impressum.representedBy && `Vertreten durch: ${legal.impressum.representedBy}`, legal.impressum.street, legal.impressum.zipCity, legal.impressum.phone && `Telefon: ${legal.impressum.phone}`, legal.impressum.email && `E-Mail: ${legal.impressum.email}`, legal.impressum.extra].filter(Boolean).join('\n')
+                : 'Der Betreiber hat noch kein Impressum hinterlegt.'
+              : (legal.datenschutz ?? 'Der Betreiber hat noch keine Datenschutzerklärung hinterlegt.')}
+          </div>
+        )}
       </div>
-      {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
-      <ModalHost />
+    </div>
+  );
+}
+
+function ForcePassword({ user, onDone }: { user: User; onDone: () => void }) {
+  const [cur, setCur] = useState('');
+  const [next, setNext] = useState('');
+  const [errs, setErrs] = useState<Record<string, string>>({});
+  const [msg, setMsg] = useState('');
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await api.post('/auth/password', { currentPassword: cur, newPassword: next });
+      onDone();
+    } catch (err) {
+      setErrs(fieldErrors(err));
+      setMsg(err instanceof ApiError ? err.message : errorMessage(err));
+    }
+  }
+  return (
+    <div className="login">
+      <div className="card">
+        <Brand />
+        <h1>Eigenes Passwort festlegen</h1>
+        <p className="muted small" style={{ marginTop: 0 }}>Hallo {user.displayName}, bitte ersetze das Startpasswort durch ein eigenes (mindestens 12 Zeichen).</p>
+        <form className="stack" onSubmit={submit}>
+          <div className="field">
+            <label htmlFor="p-cur">Startpasswort</label>
+            <input id="p-cur" type="password" autoComplete="current-password" value={cur} onChange={(e) => setCur(e.target.value)} autoFocus />
+            {errs.currentPassword && <span className="err">{errs.currentPassword}</span>}
+          </div>
+          <div className="field">
+            <label htmlFor="p-new">Neues Passwort</label>
+            <input id="p-new" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
+            {errs.newPassword && <span className="err">{errs.newPassword}</span>}
+          </div>
+          {msg && !Object.keys(errs).length && <div className="err">{msg}</div>}
+          <button className="btn pri" type="submit" style={{ justifyContent: 'center' }}>Speichern und weiter</button>
+        </form>
+      </div>
     </div>
   );
 }

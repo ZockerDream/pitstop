@@ -1,4 +1,7 @@
 import { buildApp } from './app';
+import { db } from './db/pool';
+import { startJobs } from './routes/platform';
+import { loadServerSettings } from './settings';
 import { ConfigError, loadConfig } from './config';
 import { initialize } from './db/init';
 import { closePool, initPool } from './db/pool';
@@ -30,7 +33,9 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  await loadServerSettings(db());
   const app = await buildApp(cfg, log);
+  const stopJobs = startJobs(cfg, log);
   await app.listen({ host: '0.0.0.0', port: cfg.port });
   log.info(`Pitstop läuft auf Port ${cfg.port}, öffentliche Adresse ${cfg.publicUrl}${cfg.demoMode ? ' (Demo-Modus)' : ''}`);
 
@@ -39,6 +44,7 @@ async function main(): Promise<void> {
     if (stopping) return;
     stopping = true;
     log.info(`${signal} empfangen, Pitstop wird beendet …`);
+    stopJobs();
     await app.close();
     await closePool();
     await pause(200);
