@@ -40,7 +40,6 @@ services:
 
   app:
     build: .
-    image: pitstop-app:local
     # Baut bei jedem `docker compose up -d` neu (aus dem Cache) – Update = git pull + up -d.
     pull_policy: build
     restart: unless-stopped

@@ -8,7 +8,7 @@ Diese Datei ist das **Übergabeprotokoll**. Läuft das Limit einer Sitzung ab, m
 |---|---|
 | **Zuletzt aktualisiert** | 2026-11-20 |
 | **Phase** | **Phase 15 – Version 0.5 (Anbindungen, Rest)**. Auftrag „mach alles“ 2026-11-20 schließt Commit + Push ein |
-| **Aktiver Schritt** | 15.5 Docker :7077, Winchester-Prüfung, Commit + Push, Klon-Test, Graphify |
+| **Aktiver Schritt** | 15.5 Graphify voll |
 | **Nächster Schritt** | Rückmeldung des Auftraggebers. Nicht gebaut (bewusst, steht unter Anbindungen als geplant/Idee): Fotos bei der Annahme, Discord-Login, Zwei-Faktor, FiveM-Anbindungen |
 | **Halbfertige Dateien** | keine |
 | **Laufende Dienste** | Docker-Stack `pitstop` auf http://localhost:7077 (Version 0.5, `DEMO_MODE=false`). Testdaten Winchester Motorsport per `/root/testdaten-winchester/seed-pitstop-0.2.mjs` + `seed-pitstop-0.3.mjs` + `seed-pitstop-0.4.mjs` (außerhalb des Repos; Sicherungen vor 0.3/0.4/0.5: `/root/pitstop-backups/vor-0.3-2026-11-20.dump`, `vor-0.4-…`, `vor-0.5-…`); automatische Sicherung täglich ab 4 Uhr in `data/backups`; alle @winchester-group.com-Konten gemeinsames Testpasswort (steht in den Seed-Skripten, nicht im Repo), Derrik ist Server-Admin und Inhaber. Test-Datenbank `pitstop_dev` im selben Postgres (nur für Dev-Server/Tests, Port 3100, derzeit gestoppt) |
@@ -188,6 +188,8 @@ Auftrag 2026-11-19: Mockup bestätigt, echtes Frontend und Backend bauen, „nur
 ## Protokoll
 
 Neueste Einträge oben. Format: `JJJJ-MM-TT · Schritt · Ergebnis`.
+
+- 2026-11-20 · 15.5 · :7077 gesichert (`vor-0.5-2026-11-20.dump`), Migration 006 gelaufen. Winchester-Login für Jenny, Rico, Kim, Sam nachgeholt: Rechte wie ihre Vorlagengruppen. Auf Anweisung („mach alles“) committet und nach `origin/develop` gepusht. **README-Test aus echtem `git clone` von GitHub** (`-p pitstop-readme`, Port 7098): Installation, Pflicht-Passwortwechsel, Konto + Firma, App-Sicherung, CLI `reset-password` und `disable-2fa`, Update ohne Änderung (nichts neu erstellt), Dump, Dump zurückspielen, Alles entfernen – grün. Dabei zwei Fehler gefunden und behoben: README klonte `main` (enthält nur die erste Doku) → jetzt `-b develop`; fester Image-Name `pitstop-app:local` ließ `down --rmi local` einer zweiten Installation das Image der ersten entfernen (7077 lief weiter) → Image-Name entfernt, 7077 neu gebaut.
 
 - 2026-11-20 · 15.1–15.4 · Migration 006, `auth/totp.ts`, `routes/discord.ts`, `routes/photos.ts`, `routes/game.ts`, Client (Login mit Code/Discord, Mein Konto, Fotos, Spielserver-Karte, Spiel-ID), FiveM-Ressource `fivem/pitstop` + `tests/fivem`. Tests: `rechte.mjs` grün, neues `anbindungen.mjs` (49) grün (Discord mit eigener Attrappe), FiveM-Ressource mit nachgebauten Natives gegen den Server grün, Browser-Drehbuch grün. Automatische Sicherung über Tageswechsel simuliert (Merker auf gestern, behalten 2): neue Sicherung, älteste automatische gelöscht, manuelle unberührt. Doku auf 0.5, Version 0.5.0.
 

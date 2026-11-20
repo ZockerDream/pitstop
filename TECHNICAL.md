@@ -117,7 +117,6 @@ services:
 
   app:
     build: .
-    image: pitstop-app:local
     pull_policy: build             # `docker compose up -d` baut immer (Cache) → Update = git pull + up
     restart: unless-stopped
     depends_on:
@@ -482,3 +481,4 @@ Lokal teilen sich Entwicklung und ein per `docker compose up -d` gestartetes Pit
 - **Fotos und Kartenbilder** liegen als Dateien in `data/` und sind nicht in der App-Sicherung (JSON) enthalten; nach dem Wiederherstellen einer alten Sicherung können Fotozeilen auf fehlende Dateien zeigen (404 mit Hinweis).
 
 **Weitere Tests ab 0.5:** `node tests/api/anbindungen.mjs http://localhost:3100` (49 Prüfungen; Server mit `DISCORD_CLIENT_ID=123456789`, `DISCORD_CLIENT_SECRET=attrappe`, `DISCORD_API=http://localhost:3199/api` starten). `tests/fivem/run.sh <pg_schlüssel> <rechnungsnr> <betrag_cent>` führt die FiveM-Ressource in einem Alpine-Container (Lua 5.4, cjson, curl) mit nachgebauten Natives gegen den Server aus.
+- **Kein fester Image-Name für `app`:** Compose benennt das Image je Projekt (`<projekt>-app`). Mit einem festen Namen teilen sich zwei Installationen auf einem Rechner (z. B. `-p pitstop-test`) ein Image, und `docker compose down --rmi local` der einen entfernt es der anderen (beim Klon-Test 2026-11-20 aufgefallen).
