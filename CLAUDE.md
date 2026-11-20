@@ -4,9 +4,9 @@
 
 Diese Datei ist die **Landkarte** des Projekts. Mit ihr findest du die richtige Datei, ohne den ganzen Code zu lesen. Den Arbeitsstand liefert [AGENTS.md](AGENTS.md). Das *Was* steht in [CONCEPT.md](CONCEPT.md), das *Wie* in [TECHNICAL.md](TECHNICAL.md), der Betrieb in [README.md](README.md).
 
-**Pitstop 0.5 – RP-Plattform:** Verwaltung für Werkstätten auf einem Roleplay-Server (GTA V / FiveM). Mehrere Firmen pro Server, Serververwaltung getrennt, Server-Admin als Rolle pro Konto, Gruppen & Rechte pro Firma. Module: Werkstatt (Annahme, Hallenplan, Lager, Werkzeug), Abschleppdienst (+ Fuhrpark), Tuning, Racing (+ Team, Telemetrie, Trackdays), Kunden (+ Verträge, Nachrichten), Personal (Dienstplan, Lohn, Ränge, Bewerbungen), Schulungen, Finanzen (Konten, Kasse, Auswertung); Firma mit Preisliste, Regelwerk, Pinnwand, Webhooks; Serververwaltung mit Einstellungen, Anbindungen und öffentlicher API; Zwei-Faktor, Discord-Anmeldung, Fotos zu Aufträgen, FiveM-Ressource (`fivem/pitstop`). React-SPA (Vite, TypeScript, CSS aus dem Mockup) und Fastify-API in einem Container `app`, PostgreSQL 18 im Container `db`, Docker Compose.
+**Pitstop 1.0 – RP-Plattform:** Verwaltung für Werkstätten auf einem Roleplay-Server (GTA V / FiveM). Mehrere Firmen pro Server, Serververwaltung getrennt, Server-Admin als Rolle pro Konto, Gruppen & Rechte pro Firma. Module: Werkstatt (Annahme, Hallenplan, Lager, Werkzeug), Abschleppdienst (+ Fuhrpark), Tuning, Racing (+ Team, Telemetrie, Trackdays), Kunden (+ Verträge, Nachrichten), Personal (Dienstplan, Lohn, Ränge, Bewerbungen), Schulungen, Finanzen (Konten, Kasse, Auswertung); Firma mit Preisliste, Regelwerk, Pinnwand, Webhooks; Serververwaltung mit Einstellungen, Anbindungen und öffentlicher API; Zwei-Faktor, Discord-Anmeldung, Fotos zu Aufträgen, FiveM-Ressource (`fivem/pitstop`). React-SPA (Vite, TypeScript, CSS aus dem Mockup) und Fastify-API in einem Container `app`, PostgreSQL 18 im Container `db`, Docker Compose.
 
-> **Stand des Graphen:** 2026-11-20, Version 0.5. Neue Dateien hier eintragen; ⏳ markiert Geplantes.
+> **Stand des Graphen:** 2026-11-20, Version 1.0.0. Neue Dateien hier eintragen; ⏳ markiert Geplantes.
 
 ## Lesereihenfolge
 
@@ -59,7 +59,7 @@ flowchart TD
     routes --> repo["repo/ users · companies · records"]
     guards --> companies["repo/companies.ts · rightsFor"]
     companies --> perms
-    init["db/init.ts"] --> migrate["db/migrate.ts → migrations/001–006"]
+    init["db/init.ts"] --> migrate["db/migrate.ts → migrations/001–007"]
     init --> seed["demo/seed.ts + demo/modules.ts + demo/more.ts"]
   end
   subgraph client["src/client"]

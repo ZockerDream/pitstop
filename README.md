@@ -121,6 +121,10 @@ Mit `DEMO_MODE=true` legt Pitstop beim **ersten Start** die Firma „Demo Motors
 
 **Nicht für echte Daten verwenden.** Im Demo-Modus kann jeder, der die Seite erreicht, sich mit einem Klick als Admin anmelden. Um von der Demo auf echten Betrieb zu wechseln: `DEMO_MODE=false` setzen und mit leerer Datenbank neu beginnen (siehe [Löschen](#löschen), Daten löschen, danach wieder `docker compose up -d`).
 
+### Kartenbild
+
+Unter *Firma → Firmendaten → Kartenbild* lässt sich ein eigenes Bild der Insel hochladen (JPG, PNG oder WebP, bis 60 MB). Die Vorgabe der Kartenränder passt zu einem **8K-Kartenbild**: X −5600 bis 6700, Y −4100 bis 8400. Andere Bilder lassen sich mit zwei bekannten Punkten kalibrieren oder die Ränder von Hand eintragen.
+
 ### Discord-Anmeldung
 
 1. Unter https://discord.com/developers/applications eine Anwendung anlegen.

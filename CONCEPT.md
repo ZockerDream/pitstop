@@ -1,4 +1,4 @@
-# Pitstop – Konzept (Version 0.5)
+# Pitstop – Konzept (Version 1.0)
 
 Pitstop ist die Verwaltung für Werkstätten auf einem **Roleplay-Server** (GTA V / FiveM): Werkstatt mit Lager, Abschleppdienst, Tuning, Racing, Kunden, Personal mit Dienstplan und Lohn, Schulungen und Finanzen an einem Ort, im Browser auf PC, Tablet und Handy. Geld ist Spielwährung **$ ohne Steuern**. Gestaltung und Bedienung folgen dem bestätigten Mockup (Artifact „Pitstop Prototyp“, Version 10). Technik: [TECHNICAL.md](TECHNICAL.md), Betrieb: [README.md](README.md), Arbeitsstand: [AGENTS.md](AGENTS.md).
 

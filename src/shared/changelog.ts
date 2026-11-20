@@ -8,6 +8,15 @@ export interface ChangeEntry {
 
 export const CHANGELOG: ChangeEntry[] = [
   {
+    version: '1.0.0',
+    date: '2026-11-20',
+    title: 'Erstes Release',
+    items: [
+      ['neu', 'Pitstop 1.0: alle Bereiche aus dem Mockup – Werkstatt, Abschleppdienst, Tuning, Racing, Kunden, Personal, Schulungen, Finanzen, Firma und Serververwaltung'],
+      ['besser', 'Kartenränder passen ab Werk zu einem 8K-Kartenbild (X −5600 bis 6700, Y −4100 bis 8400)'],
+    ],
+  },
+  {
     version: '0.5.0',
     date: '2026-11-20',
     title: 'Anbindungen',

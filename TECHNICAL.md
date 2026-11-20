@@ -1,6 +1,6 @@
 # Pitstop – Technische Sicht
 
-Ergänzt [CONCEPT.md](CONCEPT.md) um das *Wie*. Betrieb (Setup, Update, Backup, Löschen) steht in [README.md](README.md). Stand: 2026-11-20, **Version 0.5 (RP-Plattform, ganzes Mockup, Anbindungen)**. Wird etwas anders gebaut als hier beschrieben, wird diese Datei angepasst, nicht der Code an die Datei.
+Ergänzt [CONCEPT.md](CONCEPT.md) um das *Wie*. Betrieb (Setup, Update, Backup, Löschen) steht in [README.md](README.md). Stand: 2026-11-20, **Version 1.0.0 (RP-Plattform, ganzes Mockup, Anbindungen)**. Wird etwas anders gebaut als hier beschrieben, wird diese Datei angepasst, nicht der Code an die Datei.
 
 ## 1. Überblick
 
@@ -64,7 +64,7 @@ src/
     settings.ts      Server-Einstellungen (settings 'server', im Speicher zwischengespeichert), Merker
     hooks.ts         Webhooks: Versand aus audit(), Prüfung der Adresse (nur https, nichts Internes)
     auth/            password.ts (scrypt), sessions.ts, guards.ts (requireUser, requireServerAdmin, companyCtx), totp.ts (RFC 6238 mit node:crypto)
-    db/              pool.ts, migrate.ts, init.ts, migrations/001–006
+    db/              pool.ts, migrate.ts, init.ts, migrations/001–007
     repo/            users.ts, companies.ts (Firmen, Mitglieder, Gruppen, Ausnahmen, Rechte, Protokoll), records.ts (Fachdaten generisch)
     routes/          auth.ts (+ /me, /me/sessions), company.ts, work.ts, modules.ts (Lager, Dienstplan, Lohn, Schulungen, Tuning, Racing),
                      crud.ts (generisches Anlegen/Ändern/Löschen), more.ts (alles ab 0.4), platform.ts (Server-Einstellungen, Anbindungen,
@@ -381,7 +381,7 @@ pino schreibt JSON auf stdout (`docker compose logs`) und über `pino-roll` nach
 - **Formularfelder** ab 0.4 zusätzlich `datetime` (Ortszeit ↔ ISO) und `multi` (Chips, Liste von Werten).
 - **Tabs** (`useTabs` in `Shell.tsx`, `localStorage` `pitstop.tabs`): Hashwechsel ersetzt den aktiven Tab; `onDoubleClick` auf einem Link holt den eben ersetzten Tab zurück und hängt die Seite an. Kommt der Doppelklick vor dem Hashwechsel an, merkt `pending` die Seite und der Wechsel legt den neuen Tab an. „Daneben“ rendert eine zweite Seite in `.panes`.
 - **Kalibrierung** (`calibrate()` in `pages/Company.tsx`): zwei Klicks im Bild (gemessen mit den aktuellen Rändern) plus ihre echten Spielkoordinaten → Bildanteil je Punkt → Breite/Höhe und Ränder. Punkte unter 5 % Abstand je Achse werden abgelehnt.
-- **Karte** (`pages/MapView.tsx`): SVG in Spielkoordinaten (svg-y = −Spiel-Y), Ausschnitt per `viewBox`; Mausrad zoomt um den Mauszeiger, Ziehen verschiebt, Klick wählt (bei „Ort auf Karte“) Koordinaten. Marker skalieren gegenläufig, Linien mit `vector-effect: non-scaling-stroke`. Eigenes Kartenbild als `<image>` mit den Kartenrändern der Firma.
+- **Karte** (`pages/MapView.tsx`): SVG in Spielkoordinaten (svg-y = −Spiel-Y), Ausschnitt per `viewBox`; Mausrad zoomt um den Mauszeiger, Ziehen verschiebt, Klick wählt (bei „Ort auf Karte“) Koordinaten. Marker skalieren gegenläufig, Linien mit `vector-effect: non-scaling-stroke`. Eigenes Kartenbild als `<image>` mit den Kartenrändern der Firma. Vorgabe (Migration 007) passend zu einem 8K-Bild der Insel: X −5600 bis 6700, Y −4100 bis 8400.
 
 ## 9. Demo-Modus und Seed (`server/demo/seed.ts`)
 

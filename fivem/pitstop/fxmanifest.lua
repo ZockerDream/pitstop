@@ -5,7 +5,7 @@ lua54 'yes'
 
 name 'pitstop'
 description 'Verbindet den Spielserver mit Pitstop (Werkstatt-Verwaltung)'
-version '0.5.0'
+version '1.0.0'
 
 server_scripts {
   'config.lua',
