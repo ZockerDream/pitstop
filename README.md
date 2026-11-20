@@ -46,7 +46,7 @@ Die Anmeldung läuft über E-Mail und Passwort. Der erste Admin aus der `.env` i
 ## Installation
 
 ```bash
-git clone https://github.com/ZockerDream/pitstop.git pitstop
+git clone -b develop https://github.com/ZockerDream/pitstop.git pitstop
 cd pitstop
 
 cp .env-example .env
@@ -255,7 +255,7 @@ docker compose up -d
 ### Umzug auf einen neuen Server
 
 ```bash
-git clone https://github.com/ZockerDream/pitstop.git pitstop && cd pitstop
+git clone -b develop https://github.com/ZockerDream/pitstop.git pitstop && cd pitstop
 # .env, .impressum und conf/ vom alten Server hierher kopieren, Dump nach data/backups/
 docker compose up -d db
 docker compose exec -T db sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner' < data/backups/DATEINAME.dump
@@ -268,7 +268,7 @@ Wichtig: Vor dem Einspielen nur `db` starten, nicht `docker compose up -d`. Sons
 
 ```bash
 mkdir pitstop && cd pitstop
-git clone https://github.com/ZockerDream/pitstop.git .
+git clone -b develop https://github.com/ZockerDream/pitstop.git .
 sudo tar xzf ../pitstop-komplett-DATUM.tar.gz
 docker compose up -d
 ```
